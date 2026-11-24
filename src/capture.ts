@@ -194,6 +194,16 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
       onResize()
     }
 
+    // If Tap itself is signalled (Ctrl+C, the window closing, kill), hang up the recorded programs as a
+    // closing terminal would, so the normal path below still saves the recording and restores the
+    // terminal. A program that ignores the hangup is killed after two seconds.
+    const stopSignals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"] as const
+    const onStopSignal = () => {
+      for (const { process: child } of live) try { child.kill("SIGHUP") } catch {}
+      setTimeout(() => { for (const { process: child } of live) try { child.kill("SIGKILL") } catch {} }, 2_000).unref()
+    }
+    for (const signal of stopSignals) process.on(signal, onStopSignal)
+
     try {
       await Promise.all(live.map(({ process: child }) => child.exited))
       await Promise.all(live.map(({ parser }) => parser.queue))
@@ -214,7 +224,9 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
         if (pane.parser.error) throw pane.parser.error
       }
     } finally {
-      if (options.mirrorOutput && process.stdout.isTTY) process.stdout.write(mirroredScreen.restoreSequence())
+      for (const signal of stopSignals) process.off(signal, onStopSignal)
+      // The terminal may already be gone (window closed); restoring it is best-effort.
+      if (options.mirrorOutput && process.stdout.isTTY) try { process.stdout.write(mirroredScreen.restoreSequence()) } catch {}
       if (canInteract) {
         stdin.off("data", onInput)
         process.stdout.off("resize", onResize)
