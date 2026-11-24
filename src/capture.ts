@@ -3,6 +3,7 @@ import { encodeBytes } from "./bytes.ts"
 import { NativePaneRenderer, nativeRendererAvailable } from "./native-renderer.ts"
 import { KittyNormalizer } from "./kitty-normalizer.ts"
 import { TAP_VERSION } from "./version.ts"
+import { AltScreenTracker } from "./terminal-modes.ts"
 
 export interface CaptureOptions {
   interactive?: boolean
@@ -63,6 +64,8 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
   const layouts = defaultLayouts(spec.panes.length)
   const start = process.hrtime.bigint()
   const live: LivePane[] = []
+  // Modes the mirrored program turns on in the user's terminal are restored when capture ends.
+  const mirroredScreen = new AltScreenTracker()
 
   try {
     for (const [index, paneSpec] of spec.panes.entries()) {
@@ -112,7 +115,10 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
               ...encodeBytes(bytes),
             }
             events.push(event)
-            if (options.mirrorOutput && index === 0) process.stdout.write(bytes)
+            if (options.mirrorOutput && index === 0) {
+              process.stdout.write(bytes)
+              mirroredScreen.push(bytes)
+            }
             parser.queue = parser.queue
               .then(async () => {
                 const playback = await parser.normalizer.push(bytes)
@@ -208,6 +214,7 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
         if (pane.parser.error) throw pane.parser.error
       }
     } finally {
+      if (options.mirrorOutput && process.stdout.isTTY) process.stdout.write(mirroredScreen.restoreSequence())
       if (canInteract) {
         stdin.off("data", onInput)
         process.stdout.off("resize", onResize)

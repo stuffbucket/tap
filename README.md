@@ -76,6 +76,8 @@ Tap enters raw-input mode and records:
 3. output bytes read from the PTY;
 4. terminal resizes.
 
+When capture ends, Tap returns your terminal to a normal shell state even if the recorded program crashed or was killed: it leaves the alternate screen if the program left it on and turns off mouse reporting, focus events, bracketed paste, application cursor keys, modifyOtherKeys and the Kitty keyboard protocol.
+
 Output is replayed through Ghostty at its original time. Shell echo makes ordinary typing appear naturally. The separate input lane powers the optional keystroke overlay and preserves activity that is not echoed.
 
 Input may contain passwords or tokens. Choose a policy at capture time:
