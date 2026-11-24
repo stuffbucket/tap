@@ -3,7 +3,7 @@
 import { Command } from "commander"
 import { lstat, mkdir, mkdtemp, readFile, rm, symlink, unlink, writeFile } from "node:fs/promises"
 import { existsSync, realpathSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { homedir, tmpdir } from "node:os"
 import { captureProject } from "./capture.ts"
 import { readProject, writeProject } from "./project.ts"
@@ -336,6 +336,59 @@ program
     if (!pathEntries.includes(directory)) {
       console.log(`${directory} is not on your PATH. Add it, e.g. for zsh:\n   echo 'export PATH="${directory}:$PATH"' >> ~/.zshrc && exec zsh`)
     }
+  })
+
+program
+  .command("launch")
+  .description("What opening Tap.app does: record a shell in this terminal, then open the recording in the player")
+  .option("--dir <path>", "folder for recordings", join(homedir(), "Movies/Tap"))
+  .option("--no-open", "do not open the player in a browser afterwards")
+  .action(async (options: { dir: string; open: boolean }) => {
+    // The first launch checks every bundled component before anything is recorded.
+    const support = join(homedir(), "Library/Application Support/Tap")
+    const checked = join(support, "doctor-passed")
+    if (!existsSync(checked)) {
+      const doctor = Bun.spawn([process.execPath, import.meta.path, "doctor"], { stdio: ["ignore", "inherit", "inherit"] })
+      if ((await doctor.exited) !== 0) {
+        console.error("\nTap can't record until the problems above are fixed.")
+        process.exitCode = 1
+        return
+      }
+      await mkdir(support, { recursive: true })
+      await writeFile(checked, `${new Date().toISOString()}\n`)
+      console.log()
+    }
+
+    const now = new Date()
+    const pad = (value: number) => String(value).padStart(2, "0")
+    const name = `Tap ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} at ${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}.tap`
+    const directory = resolve(options.dir)
+    await mkdir(directory, { recursive: true })
+    const output = join(directory, name)
+    const shell = process.env.SHELL || "/bin/zsh"
+
+    process.stdout.write(
+      `\x1b[1;31m●\x1b[0m \x1b[1mTap is recording this terminal\x1b[0m to ${output}\n` +
+      `  Everything you type and see is saved, including passwords. Type \x1b[1mexit\x1b[0m to stop and open the player.\n` +
+      `  For sensitive work, record with: tap capture --input-policy redact -o file.tap -- ${basename(shell)}\n\n`,
+    )
+    const project = await captureProject({
+      title: `${basename(shell)} — ${name.replace(/\.tap$/, "")}`,
+      panes: [{ id: "main", command: [shell, "-l"], cols: process.stdout.columns || 80, rows: process.stdout.rows || 24, fontSize: 16 }],
+    }, { interactive: true, mirrorOutput: true, inputPolicy: "record" })
+    await writeProject(output, project)
+    console.log(`\n\x1b[1m■\x1b[0m Saved ${output} (${(project.durationUs / 1_000_000).toFixed(1)}s)`)
+
+    const server = await serveProject(output, { hostname: "127.0.0.1", port: 0 })
+    const url = `http://${server.hostname}:${server.port}`
+    console.log(`  Player: ${url}  — scrub, edit, and export there. Press Ctrl+C to close it.`)
+    console.log(`  Later: tap serve ${shellQuote(output)}   ·   tap render ${shellQuote(output)} -o video.mp4`)
+    if (options.open) Bun.spawn(["/usr/bin/open", url], { stdio: ["ignore", "ignore", "ignore"] })
+    await new Promise<void>((resolvePromise) => {
+      const stop = () => { void server.stop().finally(resolvePromise) }
+      process.once("SIGINT", stop)
+      process.once("SIGTERM", stop)
+    })
   })
 
 program

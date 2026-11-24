@@ -63,6 +63,10 @@ Each frame replays the pane's recorded output into a Ghostty surface sized to th
 
 Building Ghostty.app itself from source is not part of Tap's build: it would need full Xcode for Apple's `metal` shader compiler, and Ghostty's own signed, notarized build of the pinned commit is the same code.
 
+## Open Tap.app
+
+Opening Tap.app opens a Terminal window that is already recording your login shell (`tap launch`): a banner names the file under `~/Movies/Tap/`, and everything you type and see is saved. Type `exit` and the recording opens in the browser player to scrub, edit and export. The first launch runs `tap doctor` and stops before recording if anything bundled is broken.
+
 ## Watch someone use their terminal
 
 ```sh
