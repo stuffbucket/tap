@@ -197,9 +197,9 @@ Playback never executes recorded output. Clipboard, URL, notification, and files
 
 ## Local macOS DMG
 
-See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for the current trial artifact, checksum, workflows, and caveats.
+See [`RELEASE_NOTES.md`](RELEASE_NOTES.md) for the current release.
 
-Build the self-contained arm64 trial image with:
+Build and verify the self-contained arm64 image locally with:
 
 ```sh
 bun run package:dmg --dry-run
