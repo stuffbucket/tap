@@ -1,0 +1,11 @@
+node_modules/
+.cache/
+native/bin/
+dist/
+*.tap.tmp
+*.mp4
+*.webm
+*.gif
+*.png
+!assets/*.png
+.DS_Store

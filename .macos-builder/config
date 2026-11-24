@@ -1,0 +1,15 @@
+# Tap's configuration for stuffbucket/macos-builder. The producer (build.sh) builds an
+# unsigned Tap.app at app_path; the builder signs, packages, notarizes, staples and checksums.
+# `bun run package:dmg --dry-run` performs the same steps locally with an ad-hoc identity.
+app_path = dist/Tap.app
+volname = Tap
+bundle_id = co.stuffbucket.tap
+# Bun's JavaScriptCore JIT, plus loading Ghostty.app (signed by Ghostty's Developer ID), the
+# bundled Homebrew dylibs and Node addons.
+entitlements = bun-runtime
+artifact = dmg
+dmg_name = Tap-{version}-arm64.dmg
+
+# Tap.app nests Ghostty.app's Sparkle.framework (a bundle), so every nested bundle and Mach-O is
+# signed with one profile, deepest-first, rather than listed in sign_nested.
+sign_walk = bun-runtime

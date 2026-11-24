@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tap Live Capture</title>
+  <style>
+    :root{color-scheme:dark;font-family:ui-sans-serif,system-ui;background:#090a0f;color:#eef0f7}*{box-sizing:border-box}
+    body{margin:0;height:100vh;display:grid;grid-template-rows:48px 1fr;overflow:hidden}
+    header{display:flex;align-items:center;gap:12px;padding:8px 14px;background:#141620;border-bottom:1px solid #303444}
+    #status{color:#99a3bd}button{background:#242838;color:#fff;border:1px solid #40465d;border-radius:7px;padding:7px 11px}
+    #terminal{min-height:0;overflow:hidden;background:#1a1b26}
+    #menu{display:none;position:fixed;z-index:20;min-width:190px;padding:6px;background:#1b1e2a;border:1px solid #454c65;border-radius:9px;box-shadow:0 12px 40px #000b}
+    #menu button{display:block;width:100%;border:0;text-align:left;background:transparent}#menu button:hover{background:#30364a}
+  </style>
+</head>
+<body>
+  <header><strong>Tap live</strong><span id="status">connecting…</span><button id="stop">Stop & save</button></header>
+  <main id="terminal"></main>
+  <nav id="menu">
+    <button data-control="split-right">Split right</button>
+    <button data-control="split-down">Split down</button>
+    <button data-control="next-pane">Next pane</button>
+    <button data-control="close-pane">Close pane</button>
+  </nav>
+  <script type="module" src="/live.js"></script>
+</body>
+</html>

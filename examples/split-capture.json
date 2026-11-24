@@ -1,0 +1,8 @@
+{
+  "title": "Split capture",
+  "canvas": { "width": 1280, "height": 720, "background": "#08090d", "fps": 120 },
+  "panes": [
+    { "id": "left", "command": ["/bin/sh", "-lc", "printf '\\033[32mbuild pane\\033[0m\\n'; sleep 1"], "cols": 60, "rows": 24, "layout": { "x": 0, "y": 0, "width": 0.5, "height": 1 } },
+    { "id": "right", "command": ["/bin/sh", "-lc", "printf '\\033[36mtest pane\\033[0m\\n'; sleep 1"], "cols": 60, "rows": 24, "layout": { "x": 0.5, "y": 0, "width": 0.5, "height": 1 } }
+  ]
+}

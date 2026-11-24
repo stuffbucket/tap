@@ -1,0 +1,42 @@
+{
+  "name": "@stuffbucket/tap",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "tap": "./src/cli.ts"
+  },
+  "scripts": {
+    "tap": "bun src/cli.ts",
+    "build:icon": "bun scripts/build-icon.ts",
+    "build:native": "bun scripts/build-native.ts",
+    "build:vhs": "bun scripts/build-vhs-parser.ts",
+    "build:ghostty-app": "bun scripts/fetch-ghostty-app.ts",
+    "build:ghostty-full": "bun scripts/build-ghostty-full.ts",
+    "build": "bun scripts/build-all.ts",
+    "test": "bun test ./test",
+    "test:vhs-upstream": "bun scripts/check-vhs-fixtures.ts",
+    "test:vhs-bubbletea": "bun scripts/check-vhs-bubbletea.ts",
+    "test:e2e": "bun scripts/e2e.ts",
+    "package:dmg": "bun scripts/package-dmg.ts",
+    "build:app": "bun scripts/build-app.ts",
+    "verify:dmg": "bun scripts/verify-dmg.ts",
+    "typecheck": "tsc --noEmit",
+    "check": "bun run typecheck && bun run test"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.11",
+    "@termless/core": "0.11.0",
+    "@termless/ghostty": "0.11.0",
+    "@termless/web-player": "0.11.0",
+    "commander": "14.0.2"
+  },
+  "devDependencies": {
+    "@types/bun": "1.4.3",
+    "typescript": "5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.4.3"
+  }
+}

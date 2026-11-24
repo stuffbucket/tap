@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  bun-runtime.entitlements — hardened runtime + JIT/native-code + network.
+
+  Grants:
+    com.apple.security.cs.allow-jit                        — allow JIT pages.
+    com.apple.security.cs.allow-unsigned-executable-memory — allow W^X-violating
+                                                             executable memory.
+    com.apple.security.cs.disable-library-validation       — load bundled libs
+                                                             not signed by our Team ID.
+    com.apple.security.network.client                      — outbound connections.
+    com.apple.security.network.server                      — bind/listen locally.
+
+  Why: Bun-compiled binaries embed JavaScriptCore and generate JIT/executable
+  memory at runtime — the hardened runtime blocks both unless opted back in via
+  allow-jit + allow-unsigned-executable-memory. Bun's standalone binary also
+  loads its own bundled libs/frameworks (not the system ones), which library
+  validation would reject because they aren't signed by the same Team ID — hence
+  disable-library-validation. Use for a Bun/JavaScriptCore-backed app or sidecar
+  (typically also needing network).
+
+  This file is part of the builder-owned, enumerated, sanitized entitlements
+  menu. Adding or altering any profile here is a REVIEWED builder-side change —
+  clients pick from this set, they do not hand-author entitlements.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTD/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.allow-jit</key>
+    <true/>
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
+    <true/>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
+</dict>
+</plist>
