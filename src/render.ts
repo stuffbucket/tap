@@ -1,5 +1,5 @@
 import { createCanvas, loadImage, type Canvas } from "@napi-rs/canvas"
-import { extname, resolve } from "node:path"
+import { basename, extname, resolve } from "node:path"
 import { mkdir, writeFile } from "node:fs/promises"
 import { decodePlaybackBytes } from "./bytes.ts"
 import { NativePaneRenderer, nativeRendererAvailable } from "./native-renderer.ts"
@@ -227,6 +227,9 @@ export async function renderFrameDirectory(project: TapProject, output: string, 
   return totalFrames
 }
 
+/** Containers `renderVideo` writes; the extension picks the codec (see ffmpegCodecArgs). */
+export const VIDEO_FORMATS = [".mp4", ".m4v", ".mkv", ".mov", ".webm", ".gif"]
+
 function ffmpegCodecArgs(output: string, width: number, height: number): string[] {
   const pad = width % 2 !== 0 || height % 2 !== 0
     ? ["-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2"]
@@ -244,6 +247,10 @@ function ffmpegCodecArgs(output: string, width: number, height: number): string[
 }
 
 export async function renderVideo(project: TapProject, output: string, options: RenderOptions = {}): Promise<void> {
+  const format = extname(output).toLowerCase()
+  if (!VIDEO_FORMATS.includes(format)) {
+    throw new Error(`unsupported video format "${format || basename(output)}"; use ${VIDEO_FORMATS.join(", ")}`)
+  }
   const fps = options.fps ?? project.canvas.fps
   if (!Number.isFinite(fps) || fps <= 0 || fps > 240) throw new Error("fps must be between 0 and 240")
   const startUs = Math.max(0, options.startUs ?? 0)
@@ -277,21 +284,31 @@ export async function renderVideo(project: TapProject, output: string, options: 
     ? Math.round(totalFrames * (project.presentation?.loopOffsetPercent ?? 0) / 100)
     : 0
 
+  const ffmpegFailure = async (): Promise<Error> => {
+    const exitCode = await ffmpeg.exited
+    const message = (await new Response(ffmpeg.stderr).text()).trim()
+    return new Error(`ffmpeg exited with ${exitCode}${message ? `: ${message}` : ""}`)
+  }
+
   try {
     for (let frame = 0; frame < totalFrames; frame++) {
       const sample = (frame + loopOffsetFrames) % totalFrames
       const atUs = Math.min(endUs, Math.round(startUs + sample * frameDurationUs))
       const canvas = await renderer.frame(atUs)
       const pixels = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height).data
-      ffmpeg.stdin.write(pixels)
+      // If FFmpeg has stopped, the write fails with EPIPE; report FFmpeg's own error instead.
+      if (ffmpeg.exitCode !== null) throw await ffmpegFailure()
+      try {
+        ffmpeg.stdin.write(pixels)
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === "EPIPE") throw await ffmpegFailure()
+        throw error
+      }
       options.onProgress?.(frame + 1, totalFrames)
     }
     await ffmpeg.stdin.end()
     const exitCode = await ffmpeg.exited
-    if (exitCode !== 0) {
-      const error = await new Response(ffmpeg.stderr).text()
-      throw new Error(`ffmpeg exited with ${exitCode}: ${error.trim()}`)
-    }
+    if (exitCode !== 0) throw await ffmpegFailure()
   } catch (error) {
     ffmpeg.kill()
     throw error

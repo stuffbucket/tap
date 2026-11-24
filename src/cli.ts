@@ -491,7 +491,16 @@ program
     console.log(`Saved ${path}`)
   })
 
+// Errors surface as one line; set TAP_DEBUG=1 for stack traces.
+const report = (error: unknown) => {
+  if (process.env.TAP_DEBUG) console.error(error)
+  else console.error(`tap: ${error instanceof Error ? error.message : String(error)}`)
+}
+// Failures outside a command's own promise (signal handlers, stream errors) get the same treatment.
+process.on("unhandledRejection", (error) => { report(error); process.exit(1) })
+process.on("uncaughtException", (error) => { report(error); process.exit(1) })
+
 program.parseAsync().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
+  report(error)
   process.exitCode = 1
 })

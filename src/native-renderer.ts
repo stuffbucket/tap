@@ -165,12 +165,15 @@ export class NativePaneRenderer {
 
   async close(): Promise<void> {
     if (this.closed) return
-    try {
-      await this.request(OP_QUIT)
-    } finally {
-      this.closed = true
-      this.stdin.end()
-      await this.process.exited
+    // The renderer may already be gone, e.g. when Ctrl+C reached its process group too; then there
+    // is nothing to shut down, and asking it to quit would only fail.
+    if (this.process.exitCode === null && this.process.signalCode === null) {
+      try {
+        await this.request(OP_QUIT)
+      } catch {}
     }
+    this.closed = true
+    try { this.stdin.end() } catch {}
+    await this.process.exited
   }
 }
