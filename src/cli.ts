@@ -12,7 +12,7 @@ import { runTape } from "./tape.ts"
 import { serveProject } from "./server.ts"
 import { startLiveCapture } from "./live.ts"
 import { startNativeLiveCapture } from "./native-live.ts"
-import { renderGhosttyFrame } from "./ghostty-full.ts"
+import { renderGhosttyFrame, uniformFrameSizes } from "./ghostty-full.ts"
 import { TAP_VERSION } from "./version.ts"
 
 /** The CLI launcher inside Tap.app (absent when running from a source checkout). */
@@ -192,7 +192,9 @@ program
       }
       process.stderr.write("\n")
       // Frames are sized to the pane's grid; pad odd dimensions for H.264.
-      const ffmpeg = Bun.spawn(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", String(fps), "-i", join(directory, "%06d.png"), "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-pix_fmt", "yuv420p", resolve(options.output)], { stdin: "ignore", stdout: "ignore", stderr: "inherit" })
+      // Frames change size when the recording resizes; pad them to one size rather than letting FFmpeg rescale.
+      await uniformFrameSizes(Array.from({ length: frameCount }, (_, frame) => join(directory, `${String(frame + 1).padStart(6, "0")}.png`)))
+      const ffmpeg = Bun.spawn(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", String(fps), "-i", join(directory, "%06d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", resolve(options.output)], { stdin: "ignore", stdout: "ignore", stderr: "inherit" })
       if ((await ffmpeg.exited) !== 0) throw new Error("FFmpeg encoding failed")
       console.log(`Saved ${options.output} with ${frameCount} actual Ghostty-rendered frames`)
     } finally {
