@@ -134,10 +134,12 @@ program
   .option("--fps <number>", "override frames per second")
   .option("--start <seconds>", "start time in seconds")
   .option("--end <seconds>", "end time in seconds")
-  .action(async (projectPath: string, options: { output: string; fps?: string; start?: string; end?: string }) => {
+  .option("--scale <factor>", "output size multiplier; 2 gives Retina-sharp video at twice the canvas size", "1")
+  .action(async (projectPath: string, options: { output: string; fps?: string; start?: string; end?: string; scale: string }) => {
     const project = await readProject(projectPath)
     let lastPercent = -1
     await renderVideo(project, options.output, {
+      scale: Number(options.scale),
       ...(options.fps ? { fps: Number(options.fps) } : {}),
       ...(options.start ? { startUs: Math.round(Number(options.start) * 1_000_000) } : {}),
       ...(options.end ? { endUs: Math.round(Number(options.end) * 1_000_000) } : {}),
@@ -204,12 +206,14 @@ program
   .argument("<project>")
   .requiredOption("-o, --output <path>", "PNG output path")
   .option("--at <seconds>", "timestamp in seconds")
-  .action(async (projectPath: string, options: { output: string; at?: string }) => {
+  .option("--scale <factor>", "output size multiplier; 2 gives a Retina-sharp image", "1")
+  .action(async (projectPath: string, options: { output: string; at?: string; scale: string }) => {
     const project = await readProject(projectPath)
     await renderScreenshot(
       project,
       options.output,
       options.at === undefined ? project.durationUs : Math.round(Number(options.at) * 1_000_000),
+      { scale: Number(options.scale) },
     )
     console.log(`Saved ${options.output}`)
   })

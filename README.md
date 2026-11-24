@@ -157,9 +157,12 @@ Tape projects persist and render `Padding`, `Margin`, `MarginFill`, `BorderRadiu
 bun src/cli.ts screenshot demo.tap -o demo.png --at 1.25
 bun src/cli.ts render demo.tap -o demo.mp4 --fps 120
 bun src/cli.ts render demo.tap -o demo.webm --fps 60
+bun src/cli.ts render demo.tap -o demo.mp4 --scale 2   # 2560×1440, sharp on Retina screens
 ```
 
 Export uses a deterministic fixed-step project clock. It does not screen-capture and does not derive timing from pipe arrival. Every frame is composited to RGBA and sent to FFmpeg.
+
+Text is drawn at its final pixel size, never stretched: each pane's font is sized so the largest grid it shows during the recording fits its area, and the pane is drawn 1:1 from its top-left corner, inset from the frame edge. `--scale` multiplies the output size (and with it the font and presentation padding, margins and corners). The browser player does the same: native frames are requested at the screen's pixel density and shown 1:1, and the WASM view sizes its font to fit rather than stretching its canvas, using the same bundled JetBrains Mono.
 
 A tested 120 fps Kitty animation produced changing red/blue frames in a 120/1 H.264 stream. Split-pane capture with ordinary PTY output and a Kitty animation was also rendered and inspected. Interactive playback in headed Chrome on a 120 Hz ProMotion display measured 119.7 WASM animation ticks/s and 117.7 native Kitty frames/s over two seconds, i.e. tracking the display refresh rate. With Chrome's frame limiter/vsync disabled, Kitty-enabled WASM sustained over 4,000 animation ticks/s, leaving headroom for 144/240 Hz displays. Live rates are visible in the player toolbar.
 

@@ -3,7 +3,7 @@ import { existsSync } from "node:fs"
 import { dirname, join, resolve } from "node:path"
 import { readProject, writeProject } from "./project.ts"
 import { ProjectRenderer } from "./render.ts"
-import { nativeRendererAvailable } from "./native-renderer.ts"
+import { bundledFontDirectory, nativeRendererAvailable } from "./native-renderer.ts"
 import { validateProject } from "./model.ts"
 
 export interface ServeOptions {
@@ -16,6 +16,7 @@ function contentType(path: string): string {
   if (path.endsWith(".js")) return "text/javascript; charset=utf-8"
   if (path.endsWith(".wasm")) return "application/wasm"
   if (path.endsWith(".json")) return "application/json; charset=utf-8"
+  if (path.endsWith(".ttf")) return "font/ttf"
   return "application/octet-stream"
 }
 
@@ -43,6 +44,9 @@ export async function serveProject(projectPath: string, options: ServeOptions = 
     ["/vendor/__vite-browser-external-2447137e.js", join(ghosttyWeb, "dist/__vite-browser-external-2447137e.js")],
     ["/vendor/ghostty-vt.wasm", join(ghosttyWeb, "ghostty-vt.wasm")],
     ["/vendor/ghostty-vt-kitty.wasm", resolve(sourceRoot, "../.cache/libghostty-vt-kitty-prefix/bin/ghostty-vt.wasm")],
+    // The same JetBrains Mono the exporter draws with, so both player views use one typeface.
+    ["/fonts/JetBrainsMono-Regular.ttf", join(bundledFontDirectory, "JetBrainsMono-Regular.ttf")],
+    ["/fonts/JetBrainsMono-Bold.ttf", join(bundledFontDirectory, "JetBrainsMono-Bold.ttf")],
   ])
 
   const server = Bun.serve({
@@ -61,9 +65,17 @@ export async function serveProject(projectPath: string, options: ServeOptions = 
       }
       if (url.pathname === "/frame.png") {
         const requested = Number(url.searchParams.get("atUs") ?? "0")
+        // The player asks for frames at the size it shows them (its scale times the screen's pixel
+        // density), so they are drawn sharp rather than resampled. Quarter steps avoid re-creating
+        // the renderer for every pixel of a window resize.
+        const scale = Math.max(0.25, Math.min(4, Math.round(Number(url.searchParams.get("scale") ?? "1") * 4) / 4 || 1))
         try {
           const png = await serialized(async () => {
             if (!renderer) throw new Error("native renderer is not built")
+            if (renderer.scale !== scale) {
+              await renderer.close()
+              renderer = new ProjectRenderer(project, { scale })
+            }
             const atUs = Math.max(
               0,
               Math.min(project.durationUs, Number.isFinite(requested) ? Math.round(requested) : 0),

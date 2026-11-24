@@ -4,6 +4,7 @@ import { NativePaneRenderer, nativeRendererAvailable } from "./native-renderer.t
 import { KittyNormalizer } from "./kitty-normalizer.ts"
 import { TAP_VERSION } from "./version.ts"
 import { AltScreenTracker } from "./terminal-modes.ts"
+import { QueryFilter } from "./mirror-filter.ts"
 
 export interface CaptureOptions {
   interactive?: boolean
@@ -66,6 +67,7 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
   const live: LivePane[] = []
   // Modes the mirrored program turns on in the user's terminal are restored when capture ends.
   const mirroredScreen = new AltScreenTracker()
+  const mirrorFilter = new QueryFilter()
 
   try {
     for (const [index, paneSpec] of spec.panes.entries()) {
@@ -116,7 +118,9 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
             }
             events.push(event)
             if (options.mirrorOutput && index === 0) {
-              process.stdout.write(bytes)
+              // The user's terminal sees the output without its queries, so only the recording
+              // terminal answers them (see mirror-filter.ts).
+              process.stdout.write(mirrorFilter.push(bytes))
               mirroredScreen.push(bytes)
             }
             parser.queue = parser.queue

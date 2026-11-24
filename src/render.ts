@@ -2,7 +2,7 @@ import { createCanvas, loadImage, type Canvas } from "@napi-rs/canvas"
 import { basename, extname, resolve } from "node:path"
 import { mkdir, writeFile } from "node:fs/promises"
 import { decodePlaybackBytes } from "./bytes.ts"
-import { NativePaneRenderer, nativeRendererAvailable } from "./native-renderer.ts"
+import { NativePaneRenderer, cellMetrics, nativeRendererAvailable } from "./native-renderer.ts"
 import type { PaneLayout, TapPane, TapProject } from "./model.ts"
 
 interface PaneRenderState {
@@ -15,7 +15,12 @@ interface PaneRenderState {
   native: NativePaneRenderer
 }
 
-export interface RenderOptions {
+/** Output scale: 2 renders at twice the project canvas size, with text drawn at twice the size. */
+export interface ScaleOptions {
+  scale?: number
+}
+
+export interface RenderOptions extends ScaleOptions {
   fps?: number
   startUs?: number
   endUs?: number
@@ -84,10 +89,38 @@ async function drawOverlays(canvas: Canvas, project: TapProject, atUs: number): 
   }
 }
 
-function presentationFrame(canvas: Canvas, project: TapProject) {
-  const ctx = canvas.getContext("2d")
+/** Presentation metrics in output pixels: the project's values multiplied by the output scale. */
+function scaledPresentation(project: TapProject, scale: number) {
   const p = project.presentation
-  if (!p) return { x: 0, y: 0, width: canvas.width, height: canvas.height }
+  if (!p) return null
+  return { ...p, margin: p.margin * scale, padding: p.padding * scale, borderRadius: p.borderRadius * scale, shadow: p.shadow * scale, windowBarSize: p.windowBarSize * scale }
+}
+
+/** Inset for recordings without presentation settings, so text never touches the frame edge. */
+const DEFAULT_INSET = 12
+
+/** Where terminal content goes inside a canvas of the given size, after margin, bar and padding. */
+function contentRect(project: TapProject, width: number, height: number, scale: number) {
+  const p = scaledPresentation(project, scale)
+  if (!p) {
+    const inset = Math.round(DEFAULT_INSET * scale)
+    return { x: inset, y: inset, width: Math.max(1, width - inset * 2), height: Math.max(1, height - inset * 2) }
+  }
+  const bar = p.windowBar === "none" ? 0 : p.windowBarSize
+  const frameWidth = Math.max(1, width - p.margin * 2)
+  const frameHeight = Math.max(1, height - p.margin * 2)
+  return {
+    x: p.margin + p.padding,
+    y: p.margin + p.padding + bar,
+    width: Math.max(1, frameWidth - p.padding * 2),
+    height: Math.max(1, frameHeight - p.padding * 2 - bar),
+  }
+}
+
+function presentationFrame(canvas: Canvas, project: TapProject, scale: number) {
+  const ctx = canvas.getContext("2d")
+  const p = scaledPresentation(project, scale)
+  if (!p) return contentRect(project, canvas.width, canvas.height, scale)
   ctx.fillStyle = p.marginFill
   ctx.fillRect(0, 0, canvas.width, canvas.height)
   const frameX = p.margin, frameY = p.margin
@@ -112,26 +145,60 @@ function presentationFrame(canvas: Canvas, project: TapProject) {
     const colors = p.windowBar.startsWith("colorful") ? ["#ff5f57", "#febc2e", "#28c840"] : ["#778099", "#778099", "#778099"]
     for (let index = 0; index < 3; index++) {
       ctx.beginPath(); ctx.fillStyle = colors[index]!
-      ctx.arc(right ? frameX + frameWidth - 16 - index * 18 : frameX + 16 + index * 18, frameY + p.windowBarSize / 2, 6, 0, Math.PI * 2); ctx.fill()
+      ctx.arc(right ? frameX + frameWidth - (16 + index * 18) * scale : frameX + (16 + index * 18) * scale, frameY + p.windowBarSize / 2, 6 * scale, 0, Math.PI * 2); ctx.fill()
     }
-    if (p.windowTitle) { ctx.fillStyle = p.theme?.foreground ?? "#c0caf5"; ctx.font = "12px sans-serif"; ctx.textAlign = "center"; ctx.fillText(p.windowTitle, frameX + frameWidth / 2, frameY + p.windowBarSize / 2 + 4) }
+    if (p.windowTitle) { ctx.fillStyle = p.theme?.foreground ?? "#c0caf5"; ctx.font = `${12 * scale}px sans-serif`; ctx.textAlign = "center"; ctx.fillText(p.windowTitle, frameX + frameWidth / 2, frameY + p.windowBarSize / 2 + 4 * scale) }
     ctx.restore()
   }
-  return {
-    x: frameX + p.padding,
-    y: frameY + p.padding + (p.windowBar === "none" ? 0 : p.windowBarSize),
-    width: Math.max(1, frameWidth - p.padding * 2),
-    height: Math.max(1, frameHeight - p.padding * 2 - (p.windowBar === "none" ? 0 : p.windowBarSize)),
+  return contentRect(project, canvas.width, canvas.height, scale)
+}
+
+/**
+ * The largest grid a pane shows during the recording. Sizes replaced at the same instant (several
+ * resizes applied together, e.g. from editing) are never on screen and are ignored.
+ */
+export function maxGrid(pane: TapPane): { cols: number; rows: number } {
+  const resizes = pane.events.filter((event) => event.type === "resize").sort((a, b) => a.atUs - b.atUs)
+  let cols = pane.cols, rows = pane.rows
+  let current = { atUs: 0, cols: pane.cols, rows: pane.rows }
+  for (const event of resizes) {
+    if (event.type !== "resize") continue
+    if (event.atUs > current.atUs) { cols = Math.max(cols, current.cols); rows = Math.max(rows, current.rows) }
+    current = { atUs: event.atUs, cols: event.cols, rows: event.rows }
   }
+  return { cols: Math.max(cols, current.cols), rows: Math.max(rows, current.rows) }
+}
+
+/**
+ * The font size at which a pane's largest grid exactly fits its area, so text is drawn at its
+ * final pixel size instead of a bitmap being stretched into place.
+ */
+export function fittedFontSize(pane: TapPane, area: { width: number; height: number }, style: { lineHeight?: number; letterSpacing?: number } = {}): number {
+  const grid = maxGrid(pane)
+  const base = cellMetrics(pane.fontSize, style)
+  let fontSize = pane.fontSize * Math.min(area.width / (grid.cols * base.width), area.height / (grid.rows * base.height))
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const cell = cellMetrics(fontSize, { ...style, letterSpacing: (style.letterSpacing ?? 0) * fontSize / pane.fontSize })
+    if (cell.width * grid.cols <= area.width && cell.height * grid.rows <= area.height) break
+    fontSize *= 0.99
+  }
+  return Math.max(4, fontSize)
 }
 
 export class ProjectRenderer {
   readonly project: TapProject
   private readonly states = new Map<string, PaneRenderState>()
   private lastAtUs = -1
+  readonly scale: number
+  /** Output size in pixels: the project canvas multiplied by the scale. */
+  readonly width: number
+  readonly height: number
 
-  constructor(project: TapProject) {
+  constructor(project: TapProject, options: ScaleOptions = {}) {
     this.project = project
+    this.scale = Math.max(0.1, Math.min(8, options.scale ?? 1))
+    this.width = Math.max(2, Math.round(project.canvas.width * this.scale))
+    this.height = Math.max(2, Math.round(project.canvas.height * this.scale))
     this.createStates()
   }
 
@@ -139,7 +206,16 @@ export class ProjectRenderer {
     if (!nativeRendererAvailable()) {
       throw new Error("rendering requires the stable libghostty-vt backend; run: bun run build:native")
     }
+    const content = contentRect(this.project, this.width, this.height, this.scale)
+    const presentation = this.project.presentation
     for (const pane of this.project.panes) {
+      const area = pixelLayout(pane.layout, content.width, content.height)
+      const style = {
+        ...(presentation?.lineHeight !== undefined ? { lineHeight: presentation.lineHeight } : {}),
+        ...(presentation?.letterSpacing !== undefined ? { letterSpacing: presentation.letterSpacing } : {}),
+      }
+      const fontSize = fittedFontSize(pane, area, style)
+      const fit = fontSize / pane.fontSize
       this.states.set(pane.id, {
         eventIndex: 0,
         cols: pane.cols,
@@ -147,13 +223,13 @@ export class ProjectRenderer {
         layout: pane.layout,
         png: null,
         visible: true,
-        native: new NativePaneRenderer(pane.cols, pane.rows, pane.fontSize, {
+        native: new NativePaneRenderer(pane.cols, pane.rows, fontSize, {
           ...(this.project.presentation?.theme?.background ? { background: this.project.presentation.theme.background } : {}),
           ...(this.project.presentation?.theme?.foreground ? { foreground: this.project.presentation.theme.foreground } : {}),
           ...(this.project.presentation?.theme?.palette ? { palette: this.project.presentation.theme.palette } : {}),
           ...(this.project.presentation?.fontFamily ? { fontFamily: this.project.presentation.fontFamily } : {}),
           ...(this.project.presentation?.lineHeight !== undefined ? { lineHeight: this.project.presentation.lineHeight } : {}),
-          ...(this.project.presentation?.letterSpacing !== undefined ? { letterSpacing: this.project.presentation.letterSpacing } : {}),
+          ...(this.project.presentation?.letterSpacing !== undefined ? { letterSpacing: this.project.presentation.letterSpacing * fit } : {}),
         }),
       })
     }
@@ -170,11 +246,11 @@ export class ProjectRenderer {
     if (atUs < this.lastAtUs) await this.rewind()
     this.lastAtUs = atUs
 
-    const canvas = createCanvas(this.project.canvas.width, this.project.canvas.height)
+    const canvas = createCanvas(this.width, this.height)
     const ctx = canvas.getContext("2d")
     ctx.fillStyle = this.project.canvas.background
     ctx.fillRect(0, 0, canvas.width, canvas.height)
-    const content = presentationFrame(canvas, this.project)
+    const content = presentationFrame(canvas, this.project, this.scale)
 
     for (const pane of this.project.panes) {
       const state = this.states.get(pane.id)!
@@ -185,8 +261,15 @@ export class ProjectRenderer {
       // every sampled frame, even when no new PTY bytes arrived.
       state.png = await state.native.frame(atUs / 1_000)
       if (!state.png) continue
+      // Drawn 1:1 from the pane's top-left, like a terminal window: the font was sized so the
+      // largest grid fits, so nothing is resampled; a later layout change clips rather than stretches.
       const image = await loadImage(Buffer.from(state.png))
-      ctx.drawImage(image, destination.x, destination.y, destination.width, destination.height)
+      ctx.save()
+      ctx.beginPath()
+      ctx.rect(destination.x, destination.y, destination.width, destination.height)
+      ctx.clip()
+      ctx.drawImage(image, destination.x, destination.y)
+      ctx.restore()
     }
 
     await drawOverlays(canvas, this.project, atUs)
@@ -198,8 +281,8 @@ export class ProjectRenderer {
   }
 }
 
-export async function renderScreenshot(project: TapProject, output: string, atUs = project.durationUs): Promise<void> {
-  const renderer = new ProjectRenderer(project)
+export async function renderScreenshot(project: TapProject, output: string, atUs = project.durationUs, options: ScaleOptions = {}): Promise<void> {
+  const renderer = new ProjectRenderer(project, options)
   try {
     const canvas = await renderer.frame(Math.max(0, Math.min(atUs, project.durationUs)))
     await writeFile(resolve(output), await canvas.encode("png"))
@@ -208,12 +291,12 @@ export async function renderScreenshot(project: TapProject, output: string, atUs
   }
 }
 
-export async function renderFrameDirectory(project: TapProject, output: string, fps = project.canvas.fps): Promise<number> {
+export async function renderFrameDirectory(project: TapProject, output: string, fps = project.canvas.fps, options: ScaleOptions = {}): Promise<number> {
   const directory = resolve(output)
   await mkdir(directory, { recursive: true })
   const frameDurationUs = 1_000_000 / fps
   const totalFrames = Math.max(1, Math.floor(project.durationUs / frameDurationUs) + 1)
-  const renderer = new ProjectRenderer(project)
+  const renderer = new ProjectRenderer(project, options)
   try {
     for (let frame = 0; frame < totalFrames; frame++) {
       const atUs = Math.min(project.durationUs, Math.round(frame * frameDurationUs))
@@ -259,6 +342,7 @@ export async function renderVideo(project: TapProject, output: string, options: 
   const frameDurationUs = 1_000_000 / fps
   const totalFrames = Math.max(1, Math.floor((endUs - startUs) / frameDurationUs) + 1)
   const target = resolve(output)
+  const renderer = new ProjectRenderer(project, options)
   const args = [
     "-hide_banner",
     "-loglevel",
@@ -269,17 +353,16 @@ export async function renderVideo(project: TapProject, output: string, options: 
     "-pixel_format",
     "rgba",
     "-video_size",
-    `${project.canvas.width}x${project.canvas.height}`,
+    `${renderer.width}x${renderer.height}`,
     "-framerate",
     String(fps),
     "-i",
     "pipe:0",
     "-an",
-    ...ffmpegCodecArgs(target, project.canvas.width, project.canvas.height),
+    ...ffmpegCodecArgs(target, renderer.width, renderer.height),
     target,
   ]
   const ffmpeg = Bun.spawn(["ffmpeg", ...args], { stdin: "pipe", stdout: "ignore", stderr: "pipe" })
-  const renderer = new ProjectRenderer(project)
   const loopOffsetFrames = extname(output).toLowerCase() === ".gif"
     ? Math.round(totalFrames * (project.presentation?.loopOffsetPercent ?? 0) / 100)
     : 0

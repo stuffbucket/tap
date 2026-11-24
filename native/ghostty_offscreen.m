@@ -186,23 +186,68 @@ static NSString *shell_quote(NSString *value) {
     return [NSString stringWithFormat:@"'%@'", [value stringByReplacingOccurrencesOfString:@"'" withString:@"'\\''"]];
 }
 
+// Grows the surface's pixel size from the cell size until Ghostty reports exactly cols x rows.
+static bool size_surface(ghostty_surface_t surface, NSView *view, long cols, long rows) {
+    ghostty_surface_size_s size = ghostty_surface_size(surface);
+    const uint32_t cell_w = size.cell_width_px, cell_h = size.cell_height_px;
+    if (!cell_w || !cell_h) { fprintf(stderr, "Ghostty reported no cell size\n"); return false; }
+    uint32_t width = (uint32_t)cols * cell_w, height = (uint32_t)rows * cell_h;
+    for (int attempt = 0; attempt < 256; attempt++) {
+        ghostty_surface_set_size(surface, width, height);
+        size = ghostty_surface_size(surface);
+        if (size.columns >= cols && size.rows >= rows) break;
+        if (size.columns < cols) width += 1;
+        if (size.rows < rows) height += 1;
+    }
+    [view setFrameSize:NSMakeSize(width, height)];
+    size = ghostty_surface_size(surface);
+    fprintf(stderr, "terminal cols=%u rows=%u pixels=%ux%u cell=%ux%u\n",
+            size.columns, size.rows, size.width_px, size.height_px, cell_w, cell_h);
+    if (size.columns != cols || size.rows != rows) {
+        fprintf(stderr, "could not size Ghostty to %ldx%ld\n", cols, rows);
+        return false;
+    }
+    return true;
+}
+
+static bool wait_for_file(NSString *path, NSTimeInterval seconds) {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:seconds];
+    while (!file_exists(path.fileSystemRepresentation)) {
+        if ([deadline timeIntervalSinceNow] < 0) return false;
+        run_loop_for(0.01);
+    }
+    return true;
+}
+
 int main(int argc, char **argv) {
     @autoreleasepool {
-        if (argc != 5 && argc != 6) {
-            fprintf(stderr, "usage: tap-ghostty-offscreen OUTPUT.png COLS ROWS REPLAY.vt [FONT_SIZE]\n");
+        if (argc != 3 && argc != 4) {
+            fprintf(stderr, "usage: tap-ghostty-offscreen OUTPUT.png MANIFEST [FONT_SIZE]\n"
+                            "  MANIFEST lines: <cols> <rows> <bytes-file>, replayed in order; the\n"
+                            "  terminal is resized to each segment's grid before its bytes are written.\n");
             return 2;
         }
-        const long cols = strtol(argv[2], NULL, 10);
-        const long rows = strtol(argv[3], NULL, 10);
-        if (cols < 2 || rows < 1 || cols > 1000 || rows > 1000) {
-            fprintf(stderr, "invalid grid %ldx%ld\n", cols, rows);
-            return 2;
+        NSString *manifest = [NSString stringWithUTF8String:argv[2]];
+        NSString *contents = [NSString stringWithContentsOfFile:manifest encoding:NSUTF8StringEncoding error:NULL];
+        NSMutableArray<NSArray<NSNumber *> *> *grids = [NSMutableArray array];
+        for (NSString *line in [contents componentsSeparatedByString:@"\n"]) {
+            NSArray<NSString *> *fields = [line componentsSeparatedByString:@" "];
+            if (fields.count < 3) continue;
+            const long cols = fields[0].integerValue, rows = fields[1].integerValue;
+            if (cols < 2 || rows < 1 || cols > 1000 || rows > 1000) {
+                fprintf(stderr, "invalid grid %ldx%ld in manifest\n", cols, rows);
+                return 2;
+            }
+            [grids addObject:@[@(cols), @(rows)]];
         }
-        NSString *replay = [NSString stringWithUTF8String:argv[4]];
-        NSString *ready = [replay stringByAppendingString:@".ready"];
-        NSString *done = [replay stringByAppendingString:@".done"];
-        unlink(ready.fileSystemRepresentation);
-        unlink(done.fileSystemRepresentation);
+        if (grids.count == 0) { fprintf(stderr, "manifest has no segments\n"); return 2; }
+        NSString *(^marker)(NSString *, NSUInteger) = ^NSString *(NSString *kind, NSUInteger index) {
+            return [NSString stringWithFormat:@"%@.%@.%lu", manifest, kind, (unsigned long)index];
+        };
+        for (NSUInteger index = 0; index < grids.count; index++) {
+            unlink(marker(@"ready", index).fileSystemRepresentation);
+            unlink(marker(@"done", index).fileSystemRepresentation);
+        }
         if (!load_ghostty()) return 1;
         [NSApplication sharedApplication];
 
@@ -234,14 +279,22 @@ int main(int argc, char **argv) {
         }
 
         // Ghostty always starts commands through login(1) on macOS, which may print a banner, and it
-        // answers any terminal queries in the replayed bytes by writing to the PTY. So the replay
-        // script switches the tty to raw/no-echo (answers are never echoed), waits until the surface
-        // has the recorded grid size, fully resets the terminal (clearing anything login printed),
-        // then writes the recorded bytes verbatim and signals completion.
+        // answers any terminal queries in the replayed bytes by writing to the PTY. The replay script
+        // therefore switches the tty to raw/no-echo (answers are never echoed). For each segment it
+        // waits until the helper has resized the surface AND the tty reports that size (Ghostty
+        // applies resizes on its IO thread, after the request), resets the terminal before the
+        // first segment (clearing anything login printed), writes the segment's recorded bytes
+        // verbatim, and signals completion. So output lands at the size it was recorded at, and
+        // each resize reflows the screen just as it did while recording.
         NSString *script = [NSString stringWithFormat:
-            @"/usr/bin/env /bin/sh -c 'stty raw -echo; while [ ! -e \"$1\" ]; do sleep 0.01; done; "
-             "printf \"\\033c\"; cat \"$0\"; : > \"$2\"; exec sleep 600' %@ %@ %@",
-            shell_quote(replay), shell_quote(ready), shell_quote(done)];
+            @"/usr/bin/env /bin/sh -c 'stty raw -echo < /dev/tty; i=0; "
+             "while read -r cols rows file; do "
+             "while [ ! -e \"$0.ready.$i\" ]; do sleep 0.01; done; "
+             "until [ \"$(stty size < /dev/tty)\" = \"$rows $cols\" ]; do sleep 0.01; done; "
+             "[ $i -eq 0 ] && printf \"\\033c\"; "
+             "cat \"$file\"; : > \"$0.done.$i\"; i=$((i+1)); "
+             "done < \"$0\"; exec sleep 600' %@",
+            shell_quote(manifest)];
 
         NSView *view = [[NSView alloc] initWithFrame:NSMakeRect(0, 0, 800, 600)];
 
@@ -249,7 +302,7 @@ int main(int argc, char **argv) {
         surface_config.platform_tag = GHOSTTY_PLATFORM_MACOS;
         surface_config.platform.macos.nsview = (__bridge void *)view;
         surface_config.scale_factor = 1.0;
-        surface_config.font_size = argc == 6 ? (float)strtod(argv[5], NULL) : 16.0f;
+        surface_config.font_size = argc == 4 ? (float)strtod(argv[3], NULL) : 16.0f;
         surface_config.command = script.UTF8String;
         surface_config.wait_after_command = true;
 
@@ -259,39 +312,18 @@ int main(int argc, char **argv) {
             ghostty_app_free(g_app);
             return 1;
         }
-
-        // Size the surface to exactly the recorded grid: grow pixel width/height from the cell
-        // size until Ghostty reports the requested columns and rows (this absorbs padding).
         ghostty_surface_set_size(surface, 800, 600);
         ghostty_surface_set_focus(surface, true);
         run_loop_for(0.05);
-        ghostty_surface_size_s size = ghostty_surface_size(surface);
-        const uint32_t cell_w = size.cell_width_px, cell_h = size.cell_height_px;
-        if (!cell_w || !cell_h) { fprintf(stderr, "Ghostty reported no cell size\n"); return 1; }
-        uint32_t width = (uint32_t)cols * cell_w, height = (uint32_t)rows * cell_h;
-        for (int attempt = 0; attempt < 256; attempt++) {
-            ghostty_surface_set_size(surface, width, height);
-            size = ghostty_surface_size(surface);
-            if (size.columns >= cols && size.rows >= rows) break;
-            if (size.columns < cols) width += 1;
-            if (size.rows < rows) height += 1;
-        }
-        [view setFrameSize:NSMakeSize(width, height)];
-        size = ghostty_surface_size(surface);
-        fprintf(stderr, "terminal cols=%u rows=%u pixels=%ux%u cell=%ux%u\n",
-                size.columns, size.rows, size.width_px, size.height_px, cell_w, cell_h);
-        if (size.columns != cols || size.rows != rows) {
-            fprintf(stderr, "could not size Ghostty to %ldx%ld\n", cols, rows);
-            return 1;
-        }
 
-        // Release the replay and wait for every recorded byte to be written.
-        FILE *marker = fopen(ready.fileSystemRepresentation, "w");
-        if (marker) fclose(marker);
-        NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow:60];
-        while (!file_exists(done.fileSystemRepresentation)) {
-            if ([deadline timeIntervalSinceNow] < 0) { fprintf(stderr, "replay timed out\n"); return 1; }
-            run_loop_for(0.01);
+        for (NSUInteger index = 0; index < grids.count; index++) {
+            if (!size_surface(surface, view, grids[index][0].longValue, grids[index][1].longValue)) return 1;
+            FILE *file = fopen(marker(@"ready", index).fileSystemRepresentation, "w");
+            if (file) fclose(file);
+            if (!wait_for_file(marker(@"done", index), 60)) {
+                fprintf(stderr, "replay timed out in segment %lu\n", (unsigned long)index);
+                return 1;
+            }
         }
         // Let Ghostty's IO thread finish parsing and the renderer draw the final state.
         run_loop_for(0.15);
@@ -307,8 +339,10 @@ int main(int argc, char **argv) {
         ghostty_surface_free(surface);
         ghostty_app_free(g_app);
         g_app = NULL;
-        unlink(ready.fileSystemRepresentation);
-        unlink(done.fileSystemRepresentation);
+        for (NSUInteger index = 0; index < grids.count; index++) {
+            unlink(marker(@"ready", index).fileSystemRepresentation);
+            unlink(marker(@"done", index).fileSystemRepresentation);
+        }
         return ok ? 0 : 1;
     }
 }
