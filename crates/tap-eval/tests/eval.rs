@@ -370,6 +370,7 @@ fn random_edit_lists_never_panic_and_round_trip() {
                 assert_eq!(observe(&seek), observe(&replay), "round {round}: seek {t}");
             }
         }
+        let _ = tap_eval::bake::bake(session, raw, &entries, &evaluation);
     }
     println!("{ok} evaluated, {errors} invalid, {excised} excised, {replaced} replaced");
     // The random lists exercise the interesting paths.
@@ -378,4 +379,24 @@ fn random_edit_lists_never_panic_and_round_trip() {
         excised > 15 && replaced > 15,
         "{excised} excised, {replaced} replaced"
     );
+}
+
+#[test]
+fn an_export_of_an_excision_indexes_as_the_edited_session() {
+    let session = fixture("osc133");
+    let raw = SessionIndex::build(&session).unwrap();
+    let entries = vec![EditEntry::new(excise(347, 653))];
+    let evaluation = evaluate_entries(&session, &raw, &entries).unwrap();
+    let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation);
+    // The excision's time cut stays, as a skip.
+    assert_eq!(baked.edits.edits.len(), 1);
+    assert_eq!(baked.edits.edits[0].op.name(), "skip");
+    assert_eq!(
+        baked.time_map().unwrap().edited_duration(),
+        evaluation.time_map.edited_duration()
+    );
+    let reindexed = SessionIndex::build(&baked).unwrap();
+    let edited = edited_index(&session, &evaluation);
+    assert_eq!(reindexed.transcript(), edited.transcript());
+    assert!(!reindexed.transcript().to_text().contains("nonexistent"));
 }

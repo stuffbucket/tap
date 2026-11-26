@@ -24,10 +24,11 @@
 //! The result's [`Evaluation::programs`] feed
 //! [`tap_index::SessionIndex::build_programs`], so the transcript,
 //! checkpoints and seek of the edited session come from the same index
-//! code as the raw one.
+//! code as the raw one; [`bake::bake`] writes the edited session out.
 //!
 //! Nothing here is published (`publish = false`).
 
+pub mod bake;
 pub mod excise;
 pub mod mask;
 pub mod redact;

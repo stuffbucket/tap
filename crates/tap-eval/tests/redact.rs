@@ -6,6 +6,7 @@ mod support;
 use tap_eval::redact;
 use tap_eval::{CellRect, Outcome};
 use tap_index::SessionIndex;
+use tap_model::EventKind;
 use tap_model::edl::{EditOp, MaskStyle, SeqRange, TrackedRef};
 
 use support::*;
@@ -103,4 +104,68 @@ fn redacts_a_secret_everywhere_it_can() {
         blocks[3].command.as_ref().map(|c| c.text.as_str()),
         Some("echo token sk-live-4f9a2b")
     );
+}
+
+#[test]
+fn exports_of_the_redacted_session_hold_no_keystrokes_or_text() {
+    let session = fixture("edits");
+    let raw = SessionIndex::build(&session).unwrap();
+    let redaction = redact::plan(&session, &raw, SECRET).unwrap();
+    let mut entries = session.edits.edits.clone();
+    entries.extend(redaction.edits.iter().cloned());
+    let baked = tap_eval::bake::bake(&session, &raw, &entries, &redaction.evaluation);
+
+    let events = baked.pane_events(&main_pane());
+    let typed: Vec<u8> = events
+        .iter()
+        .filter_map(|e| match &e.kind {
+            EventKind::Input(i) => Some(i.data.clone()),
+            _ => None,
+        })
+        .flatten()
+        .collect();
+    assert!(!typed.windows(SECRET.len()).any(|w| w == SECRET.as_bytes()));
+    let withheld: Vec<_> = events
+        .iter()
+        .filter(|e| matches!(&e.kind, EventKind::Input(i) if i.redacted == Some(true)))
+        .collect();
+    assert_eq!(withheld.len(), 14);
+    // Times and order are kept.
+    assert_eq!(events.len(), session.pane_events(&main_pane()).len());
+
+    // The export's output holds the secret only where the report said. The
+    // mask is an edit, so the export is a package (the legacy JSON form
+    // holds no edits).
+    let dir = std::env::temp_dir().join(format!("tap-eval-redact-{}", std::process::id()));
+    let _ = std::fs::remove_dir_all(&dir);
+    tap_model::package::create(&dir, &baked).unwrap();
+    let reimported = tap_model::package::open(&dir).unwrap();
+    std::fs::remove_dir_all(&dir).unwrap();
+    assert_eq!(reimported, baked);
+    let reindexed = SessionIndex::build(&reimported).unwrap();
+    let bytes = reindexed.pane(&main_pane()).unwrap().stream_bytes();
+    let hits: Vec<usize> = bytes
+        .windows(SECRET.len())
+        .enumerate()
+        .filter(|(_, w)| *w == SECRET.as_bytes())
+        .map(|(i, _)| i)
+        .collect();
+    let reported: Vec<usize> = redaction
+        .report
+        .remaining
+        .iter()
+        .map(|r| r.at.start as usize)
+        .collect();
+    assert_eq!(hits, reported);
+    // Re-indexing the export gives the edited session's transcript.
+    let edited = edited_index(&session, &redaction.evaluation);
+    assert_eq!(reindexed.transcript(), edited.transcript());
+    // The mask still applies to the export, at its new offset.
+    let masks: Vec<_> = reimported
+        .edits
+        .edits
+        .iter()
+        .filter(|e| e.op.name() == "mask")
+        .collect();
+    assert_eq!(masks.len(), 1);
 }
