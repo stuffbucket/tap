@@ -23,11 +23,15 @@ mise x rust@1.99.0 zig@0.17.1 -- cargo build --release -p tap-index
 mise x rust@1.99.0 zig@0.17.1 bun@1.4.3 -- bun run check:rust
 ```
 
-Only [`src/vt.rs`](src/vt.rs) uses libghostty-rs. It exposes the dozen
-operations the index needs (write until ground, screen and cursor state,
-pinned cells, plain-text formatting, snapshots), so the engine can later be
-swapped for `stuffbucket/libghostty-render`'s Rust binding without touching
-the rest of the crate.
+Only [`src/vt.rs`](src/vt.rs) uses libghostty-rs. It exposes the operations
+the index and [`tap-eval`](../tap-eval/README.md) need (write until ground,
+screen and cursor state, pinned cells, plain-text formatting, snapshots,
+search, codepoint widths, and the terminal state an excision carries:
+modes, colours, Kitty keyboard flags, title, working directory, pointer and
+cursor shape, and the formatter's extras for character sets, scrolling
+region, tab stops, modifyOtherKeys, style, hyperlink and protection), so the
+engine can later be swapped for `stuffbucket/libghostty-render`'s Rust
+binding without touching the rest of the crate or tap-eval.
 
 The `tap-index` binary is not part of Tap.app: the macOS release builder has
 no Rust toolchain yet, and `scripts/build-all.ts` and `scripts/build-app.ts`
@@ -56,7 +60,12 @@ let transcript = index.transcript();               // Transcript { panes: [PaneT
 let pane = index.pane(&pane_id)?;                  // PaneIndex { chunks, marks, inputs, segments }
 let term = index.seek(&pane_id, source_us)?;       // vt::Terminal at that moment
 term.screen_text(); term.cursor();
+let runs = pane.runs()?;                           // printable runs, folded on first use
+let edited = tap_index::SessionIndex::build_programs(&session, &programs, options)?;
 ```
+
+`build_programs` indexes an edited session: each pane's `PaneProgram`
+(from tap-eval) instead of its raw stream.
 
 ## How it works
 
@@ -65,6 +74,31 @@ stream (an event's `playbackData` when it has one, its `data` otherwise).
 Every offset in the index is into that stream. Resize events are applied in
 order; input events never reach the terminal, and nothing is written to a
 PTY, so the terminal's replies to queries are dropped.
+
+### Byte programs
+
+An edited session plays a *byte program* per pane instead of its raw stream
+(`src/program.rs`): an ordered list of splices, each removing a non-empty
+range of source bytes and playing other bytes (possibly none) in its place,
+plus the input events it withholds (redacted: no bytes, time and origin
+kept) or drops (typed for an excised command). The raw events never change.
+The identity program is the raw stream, and an index built over it is the
+raw index, byte for byte.
+
+- **Mapping.** `locate(s)` gives a kept source byte's one program offset,
+  or the bytes its splice plays if it was removed; `to_source(p)` gives a
+  program byte's source byte, or the splice that inserted it. They invert
+  each other on kept bytes.
+- **Events.** Every event keeps its item and time; an output event plays the
+  program bytes derived from its source bytes, so it can play nothing.
+  Inserted bytes are derived from one source byte, their splice's attach
+  point: the last byte removed (a replacement appears when the text it
+  replaces would have), or the first byte after the range (an excision's
+  fixups play after every event inside the range, resizes included,
+  together with the next prompt). `boundary(x)` maps event offsets by that
+  rule.
+- **Offsets.** In an index built over a program, every offset (chunks,
+  marks, inputs, segments, runs, checkpoint keys) is a program offset.
 
 ### Marks
 
@@ -200,13 +234,16 @@ pages out differently.
 last one, always with the parser at ground. One that would store more new
 bytes than 16 KiB plus 16 per byte of output since the last one waits until
 enough output has passed to pay for it, unless 16 resizes have passed.
-Checkpoints are keyed by `(engine fingerprint, pane, stream offset)`; the
-fingerprint names libghostty-vt's version, build metadata and optimisation
-mode, and the scrollback limit. (The design keys them by a hash of the byte
-program up to the offset; until byte-changing edits are evaluated the byte
-program is the raw stream, so the offset alone identifies it.) Each records
-its exact position (event and bytes into it), so a resize at the same
-offset is replayed after it.
+Checkpoints are keyed by `(engine fingerprint, pane, program prefix hash,
+stream offset)`; the fingerprint names libghostty-vt's version, build
+metadata and optimisation mode, and the scrollback limit. The prefix hash
+identifies the byte program up to the offset: it hashes the splices whose
+bytes start before it, which with the raw stream fixed determine every byte
+of the prefix. It is the same for the raw stream at every offset and for
+any program before its first splice, so time-only edits, and byte edits
+later in the session, leave a checkpoint's key unchanged. Each records its
+exact position (event and bytes into it), so a resize at the same offset is
+replayed after it.
 
 **Storage.** A snapshot is a sequence of checksummed records, one per page
 of history among them. A page in history does not change until a reflow, a
@@ -225,6 +262,28 @@ history.
 
 Checkpoints are kept in memory. Writing them under
 `Session.tap/checkpoints/<fingerprint>/` is not done yet.
+
+### Printable runs
+
+`runs::fold` (`PaneIndex::runs`, computed on first use so building the
+index costs nothing more) replays a pane with all history kept and records
+every *printable run*: a stretch of printable bytes written with the parser
+at ground, possibly across events, with its byte range, the cell its first
+character was drawn in and the cursor after it. Rows are *virtual*: the
+screen row plus the rows of history ED 3 has erased so far, so ED 3 moves
+nothing. Runs separated only by SGR sequences draw contiguous text and are
+grouped into *chains* (`key=sk-live-\e[31m4f9a2b` is one).
+
+`cell_source` traces a cell seen on the screen back to the run that last
+drew it and the character's bytes, using libghostty-vt's codepoint widths.
+A cell keeps its virtual row until cells move, so tracing works within a
+*layout epoch*, and a new one starts at a resize (reflow), a reset, insert
+or delete line or character, scroll up or down, reverse index, and line
+feeds while a scrolling region may be set. Switching screens starts none:
+runs record their screen, and neither screen's cells move.
+
+tap-eval uses runs to decide whether text was drawn as plain text (so it
+can be rewritten in place), to find text by its bytes, and to anchor masks.
 
 ### Measurements
 
@@ -272,8 +331,16 @@ with Tap's shell integration, without it (`--no-shell-integration`), and with
 input redacted. Re-record them with `bun scripts/record-fixture.ts` and update
 the expectations in `tests/transcript.rs`.
 
+`edits.tap` is a session for tap-eval's tests: commands that change
+terminal state, print a secret (plainly, with a colour change inside it,
+and on the alternate screen split by cursor addressing), clear the screen,
+transmit and place a Kitty image, and position the cursor absolutely.
+
 `tests/seek.rs` holds the golden seek tests, `tests/scrollback.rs` the two
 ways a restore differs under a limit, and `tests/checkpoint_memory.rs` checks
 that doubling a synthetic session about doubles what checkpoints store, that
 storage stays within the allowance, and that no two checkpoints are further
-apart than the policy allows.
+apart than the policy allows. `tests/program.rs` checks byte programs (the
+mapping round-trips and events tile the program, by proptest; the identity
+program indexes as the raw stream), and `tests/vt_state.rs` the state
+readers and search.

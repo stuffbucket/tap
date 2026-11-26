@@ -184,14 +184,15 @@ and the inverse — are in the `timemap` module docs.
 
 ## Deferred
 
-- Evaluation of `retimeTyping` (needs typing segments from the index), speed
-  ramps, and the byte-changing and render-time ops (`excise`, `replaceText`,
-  `redactInput`, `mask`). They parse and round-trip; `TimeMap::build` returns
-  `EvalError::Unsupported` listing each one.
-- The byte program, segmentation, the index, checkpoints and thumbnails
-  (`tap-eval`, `tap-index`).
+- Evaluation of `retimeTyping` (needs typing segments from the index) and
+  speed ramps. They parse and round-trip; `TimeMap::build` and `tap-eval`
+  return `EvalError::Unsupported` listing each one.
+- The byte-changing and render-time ops (`excise`, `replaceText`,
+  `redactInput`, `mask`) are evaluated by [`tap-eval`](../tap-eval/README.md),
+  which also builds the time map for a whole edit list; `TimeMap::build`
+  alone lists them as unsupported. Segmentation, the index and checkpoints
+  are in [`tap-index`](../tap-index/README.md); thumbnails are not done.
 - Camera and keystroke-HUD lanes in `edits.json`, an undo stack, and Kitty
   media under `assets/`.
 - Resynchronising past a damaged record in the middle of a `.tlog`
   (recovery stops at the first damage).
-- CI for the Rust workspace.

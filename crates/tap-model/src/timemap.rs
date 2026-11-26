@@ -39,7 +39,9 @@
 //!
 //! Disabled entries are ignored. Byte-changing and render-time ops, typing
 //! retiming and speed ramps make [`TimeMap::build`] fail with
-//! [`EvalError::Unsupported`], listing every such op.
+//! [`EvalError::Unsupported`], listing every such op. `tap-eval` evaluates
+//! whole edit lists: it builds this map from the time-only ops plus a skip
+//! for every excision, and refuses only typing retiming and speed ramps.
 //!
 //! ## Overlaps and order
 //!
@@ -380,9 +382,9 @@ fn unsupported(op: &EditOp) -> Option<&'static str> {
         } => Some("speed ramps are not supported yet"),
         EditOp::RetimeTyping { .. } => Some("needs typing segments from the index"),
         EditOp::Excise { .. } | EditOp::ReplaceText { .. } | EditOp::RedactInput { .. } => {
-            Some("changes bytes; needs the byte program")
+            Some("changes bytes; tap-eval evaluates it with the time map")
         }
-        EditOp::Mask { .. } => Some("render-time; applied by the compositor"),
+        EditOp::Mask { .. } => Some("render-time; tap-eval resolves it"),
     }
 }
 

@@ -197,23 +197,33 @@ pub enum EditOp {
         /// How long to hold it.
         duration_us: u64,
     },
-    /// Byte-changing. Remove a command as if it never happened.
+    /// Byte-changing. Remove a command as if it never happened: the bytes
+    /// from one OSC 133 prompt mark to the next (or the end of the output)
+    /// are not played, fixups restore the terminal state they changed, and
+    /// their time is cut. When that cannot be exact it plays as a skip; see
+    /// `crates/tap-eval`.
     Excise {
         /// The command's segment.
         segment: SegId,
     },
-    /// Byte-changing. Replace output text, checked against `expect`.
+    /// Byte-changing. Replace output text in place, checked against
+    /// `expect`. Only text drawn as plain text, replaced by text taking the
+    /// same cells, can be; otherwise it needs a mask (see `crates/tap-eval`).
     ReplaceText {
         /// The pane.
         pane: PaneId,
-        /// The output bytes to replace.
+        /// The output bytes to replace: printable characters, and the SGR
+        /// sequences between them, which are kept.
         bytes: ByteRange,
         /// The replacement text.
         text: String,
-        /// What the formatter must read after the replacement.
+        /// What the cells those bytes draw must read (plain text, soft
+        /// wraps joined, trailing blanks trimmed) right after they are
+        /// drawn with the replacement.
         expect: String,
     },
-    /// Byte-changing. Withhold the bytes of some input events.
+    /// Byte-changing. Withhold the bytes of some input events (their time
+    /// and origin stay, marked redacted), so exports do not carry them.
     RedactInput {
         /// The pane.
         pane: PaneId,

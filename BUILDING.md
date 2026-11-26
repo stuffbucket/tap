@@ -43,6 +43,8 @@ Generated binaries are written under `native/bin/`; generated dependency trees a
 mise x rust@1.99.0 zig@0.17.1 -- cargo build --release -p tap-index
 ```
 
+`crates/tap-eval` builds the `tap-eval` binary, which applies an edit list to a recording and prints what each edit did and the edited transcript (`tap-eval preview`), or writes the edited session (`tap-eval apply`); see its [README](crates/tap-eval/README.md). Build it the same way, with `-p tap-eval`.
+
 The first build clones Ghostty at the pinned `vt-1.0.1` commit (so it needs network access) and builds libghostty-vt with Zig, as ReleaseSafe in every profile (see `.cargo/config.toml`). `tap transcript` looks for the binary in `target/release`, then `target/debug` (or under `CARGO_TARGET_DIR`), and prints this command when it finds neither.
 
 ## Checks
