@@ -1,0 +1,22 @@
+[package]
+name = "tap-model"
+version = "0.1.0"
+description = "Tap's recording model: Session.tap packages, raw event logs, the edit decision list and the time map"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+repository.workspace = true
+
+[dependencies]
+base64 = "0.22"
+crc32c = "0.6"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+
+[dev-dependencies]
+proptest = "1"
+
+[lints]
+workspace = true
