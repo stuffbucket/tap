@@ -7,7 +7,8 @@
 //!   with integer microseconds and a per-pane sequence number;
 //! - the per-pane event log ([`tlog`]), an append-safe, checksummed record
 //!   log;
-//! - the edit decision list ([`edl`]).
+//! - the edit decision list ([`edl`]) and the time map its time-only ops
+//!   produce ([`timemap`]).
 
 mod error;
 mod fsutil;
@@ -17,10 +18,12 @@ mod varint;
 pub mod edl;
 pub mod event;
 pub mod pane_id;
+pub mod timemap;
 pub mod tlog;
 
 pub use edl::{EditEntry, EditOp, Src, SrcRange};
 pub use error::Error;
 pub use event::{EventKind, RawEvent};
 pub use pane_id::PaneId;
+pub use timemap::{EvalError, SourceTimeline, TimeMap};
 pub use tlog::TlogError;

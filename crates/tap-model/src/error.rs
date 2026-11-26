@@ -5,9 +5,10 @@ use std::path::{Path, PathBuf};
 
 use thiserror::Error as ThisError;
 
+use crate::timemap::EvalError;
 use crate::tlog::TlogError;
 
-/// Anything that can go wrong reading or writing a recording.
+/// Anything that can go wrong reading, writing or evaluating a recording.
 #[derive(Debug, ThisError)]
 pub enum Error {
     /// A file-system operation failed.
@@ -31,6 +32,9 @@ pub enum Error {
     /// The data parses but breaks a rule; the message names the field.
     #[error("{0}")]
     Invalid(String),
+    /// The edit list cannot be evaluated.
+    #[error(transparent)]
+    Eval(#[from] EvalError),
 }
 
 impl Error {
