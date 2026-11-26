@@ -27,6 +27,7 @@ mod id;
 pub mod line_editor;
 pub mod program;
 pub mod replay;
+pub mod runs;
 pub mod scan;
 pub mod segment;
 pub mod stream;
@@ -35,12 +36,14 @@ pub mod vt;
 
 use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::OnceLock;
 
 use serde::Serialize;
 use tap_model::{PaneId, Session};
 
 pub use program::{Attach, InputEdit, Location, Origin, PaneProgram, ProgramError, Splice};
 pub use replay::{Checkpoint, CheckpointKey, Checkpoints, Position, Replay};
+pub use runs::{Chain, Run, Runs};
 pub use scan::{Mark, MarkKind};
 pub use segment::{BoundarySource, Segment, SegmentKind};
 pub use transcript::{Block, CommandSource, CommandText, Durations, Transcript, TuiSpan};
@@ -113,6 +116,8 @@ pub struct PaneIndex {
     blocks: Vec<Block>,
     #[serde(skip)]
     stream: PaneStream,
+    #[serde(skip)]
+    runs: OnceLock<Runs>,
 }
 
 impl PaneIndex {
@@ -135,6 +140,16 @@ impl PaneIndex {
     /// The edits the stream plays (the identity for an unedited pane).
     pub fn program(&self) -> &PaneProgram {
         &self.stream.program
+    }
+
+    /// The stream's printable runs ([`runs`]), folded the first time they
+    /// are asked for.
+    pub fn runs(&self) -> Result<&Runs, VtError> {
+        if let Some(runs) = self.runs.get() {
+            return Ok(runs);
+        }
+        let runs = runs::fold(&self.stream)?;
+        Ok(self.runs.get_or_init(|| runs))
     }
 }
 
@@ -353,6 +368,7 @@ fn index_pane(
         segments: segmentation.segments,
         blocks,
         stream,
+        runs: OnceLock::new(),
     })
 }
 
