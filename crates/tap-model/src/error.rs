@@ -8,7 +8,8 @@ use thiserror::Error as ThisError;
 use crate::timemap::EvalError;
 use crate::tlog::TlogError;
 
-/// Anything that can go wrong reading, writing or evaluating a recording.
+/// Anything that can go wrong reading, writing, converting or evaluating a
+/// recording.
 #[derive(Debug, ThisError)]
 pub enum Error {
     /// A file-system operation failed.
@@ -29,6 +30,15 @@ pub enum Error {
         #[source]
         source: TlogError,
     },
+    /// A JSON document does not parse or does not match the schema.
+    #[error("{context}: {source}")]
+    Json {
+        /// Which document or field.
+        context: String,
+        /// The parser's message (with line and column when known).
+        #[source]
+        source: serde_json::Error,
+    },
     /// The data parses but breaks a rule; the message names the field.
     #[error("{0}")]
     Invalid(String),
@@ -48,6 +58,13 @@ impl Error {
     pub(crate) fn tlog(path: &Path, source: TlogError) -> Self {
         Self::Tlog {
             path: path.to_owned(),
+            source,
+        }
+    }
+
+    pub(crate) fn json(context: impl Into<String>, source: serde_json::Error) -> Self {
+        Self::Json {
+            context: context.into(),
             source,
         }
     }

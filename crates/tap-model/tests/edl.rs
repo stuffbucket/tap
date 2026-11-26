@@ -2,6 +2,7 @@
 
 use serde_json::{Value, json};
 use tap_model::PaneId;
+use tap_model::edits::Edits;
 use tap_model::edl::{
     ByteRange, EditEntry, EditOp, MaskStyle, OpClass, Rate, Ratio, SegId, SeqRange, Src, SrcRange,
     TrackedRef,
@@ -201,4 +202,19 @@ fn bad_entries_are_rejected_with_reasons() {
             "{value}: expected {expected:?} in {message:?}"
         );
     }
+}
+
+#[test]
+fn edits_document_round_trips() {
+    let edits = Edits {
+        edits: every_op().into_iter().map(EditEntry::new).collect(),
+        ..Edits::default()
+    };
+    let text = serde_json::to_string_pretty(&edits).unwrap();
+    assert_eq!(serde_json::from_str::<Edits>(&text).unwrap(), edits);
+    let err = serde_json::from_str::<Edits>(
+        r#"{"formatVersion":1,"edits":[],"overlays":[],"camera":[]}"#,
+    )
+    .unwrap_err();
+    assert!(err.to_string().contains("unknown field `camera`"), "{err}");
 }

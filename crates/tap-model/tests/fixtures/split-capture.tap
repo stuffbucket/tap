@@ -1,0 +1,61 @@
+{
+  "version": 1,
+  "title": "Split capture",
+  "createdAt": "2026-11-26T06:38:41.304Z",
+  "durationUs": 1047249,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "background": "#08090d",
+    "fps": 120
+  },
+  "panes": [
+    {
+      "id": "left",
+      "cols": 60,
+      "rows": 24,
+      "fontSize": 16,
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 0.5,
+        "height": 1
+      },
+      "events": [
+        {
+          "atUs": 29913,
+          "type": "output",
+          "data": "G1szMm1idWlsZCBwYW5lG1swbQ0K",
+          "encoding": "base64"
+        }
+      ]
+    },
+    {
+      "id": "right",
+      "cols": 60,
+      "rows": 24,
+      "fontSize": 16,
+      "layout": {
+        "x": 0.5,
+        "y": 0,
+        "width": 0.5,
+        "height": 1
+      },
+      "events": [
+        {
+          "atUs": 35928,
+          "type": "output",
+          "data": "G1szNm10ZXN0IHBhbmUbWzBtDQo=",
+          "encoding": "base64"
+        }
+      ]
+    }
+  ],
+  "overlays": [],
+  "metadata": {
+    "terminal": "ghostty",
+    "terminalEngine": "libghostty-vt 1.0.1",
+    "timebase": "microseconds",
+    "source": "pty"
+  }
+}

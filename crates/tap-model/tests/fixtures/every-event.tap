@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "title": "Every event — ünïcode title",
+  "createdAt": "2026-11-25T12:00:00.000Z",
+  "durationUs": 9000000,
+  "canvas": { "width": 1920, "height": 1080, "background": "#101014", "fps": 59.94 },
+  "presentation": {
+    "padding": 24,
+    "margin": 8.5,
+    "marginFill": "#000000",
+    "borderRadius": 10,
+    "windowBar": "colorfulright",
+    "windowBarSize": 30,
+    "windowTitle": "demo",
+    "shadow": 12,
+    "fontFamily": "JetBrains Mono",
+    "letterSpacing": 0.5,
+    "lineHeight": 1.2,
+    "cursorBlink": true,
+    "loopOffsetPercent": 37.5,
+    "themeName": "Custom",
+    "theme": { "background": "#000", "foreground": "#fff", "cursor": "#0f0", "palette": ["#000", "#f00"] }
+  },
+  "panes": [
+    {
+      "id": "main",
+      "title": "zsh",
+      "cols": 80,
+      "rows": 24,
+      "fontSize": 14.5,
+      "layout": { "x": 0, "y": 0, "width": 0.5, "height": 1 },
+      "events": [
+        { "atUs": 0, "type": "visibility", "visible": false },
+        { "atUs": 0, "type": "output", "data": "plain text \u001b[1mbold\u001b[0m é 漢字 🎉\r\n" },
+        { "atUs": 0, "type": "output", "data": "explicit utf8", "encoding": "utf8" },
+        { "atUs": 10, "type": "output", "data": "/wD+", "encoding": "base64" },
+        { "atUs": 10, "type": "output", "data": "", "encoding": "base64" },
+        { "atUs": 20, "type": "output", "data": "G19HYT10LHQ9ZjsvdG1wL3guYmluG1w=", "encoding": "base64", "playbackData": "G19HYT1ULGY9MzI7AAAA/xtc", "playbackEncoding": "base64" },
+        { "atUs": 25, "type": "output", "data": "x", "playbackData": "y" },
+        { "atUs": 30, "type": "input", "data": "ls\r", "origin": "keyboard" },
+        { "atUs": 31, "type": "input", "data": "cGFzdGU=", "encoding": "base64", "origin": "paste" },
+        { "atUs": 32, "type": "input", "data": "G1s/NjJj", "encoding": "base64", "origin": "terminal-reply" },
+        { "atUs": 33, "type": "input", "data": "a", "encoding": "utf8", "origin": "vhs" },
+        { "atUs": 34, "type": "input", "data": "b", "origin": "automation", "redacted": false },
+        { "atUs": 35, "type": "input", "data": "", "encoding": "base64", "origin": "keyboard", "redacted": true },
+        { "atUs": 36, "type": "input", "data": "no origin" },
+        { "atUs": 1000000, "type": "resize", "cols": 120, "rows": 40 },
+        { "atUs": 1000000, "type": "scroll", "delta": -3 },
+        { "atUs": 1000001, "type": "scroll", "delta": 1000000 },
+        { "atUs": 2000000, "type": "marker", "label": "Screenshot: ✓ done.png" },
+        { "atUs": 3000000, "type": "layout", "layout": { "x": 0.25, "y": 0.125, "width": 0.75, "height": 0.875 } },
+        { "atUs": 9000000, "type": "visibility", "visible": true }
+      ]
+    },
+    {
+      "id": "side.pane-2",
+      "cols": 65535,
+      "rows": 1,
+      "fontSize": 16,
+      "layout": { "x": 0.5, "y": 0, "width": 0.5, "height": 1 },
+      "events": []
+    }
+  ],
+  "overlays": [
+    { "id": "caption", "type": "text", "startUs": 0, "endUs": 2000000, "x": 40, "y": 60.5, "text": "Hello", "color": "#fff", "font": "24px sans-serif" },
+    { "id": "logo", "type": "image", "startUs": 1000000, "endUs": 9000000, "x": 0, "y": 0, "width": 128, "height": 64, "source": "logo.png", "opacity": 0.75 },
+    { "id": "bare", "type": "text", "startUs": 5, "endUs": 5, "x": 1, "y": 2, "text": "" }
+  ],
+  "metadata": {
+    "terminal": "ghostty",
+    "terminalEngine": "libghostty-vt 1.0.1",
+    "timebase": "microseconds",
+    "source": "pty",
+    "shellIntegration": ["fish", "zsh"]
+  }
+}
