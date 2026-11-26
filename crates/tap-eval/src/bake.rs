@@ -15,6 +15,9 @@
 //! every enabled excision as the skip of its time. Enabled byte-changing ops
 //! are applied and dropped, and so are those that did not apply (rewrites
 //! that need a mask, edits superseded by another, masks that cover nothing).
+//! Disabled entries are kept exactly as given, whatever their op; note that
+//! their byte coordinates still count the original recording's playback
+//! stream.
 
 use tap_model::Session;
 use tap_model::edl::{EditEntry, EditOp, Src, SrcRange, TrackedRef};
@@ -124,6 +127,11 @@ pub fn bake(
     };
     let mut edits = Vec::new();
     for (entry, outcome) in entries.iter().zip(&evaluation.outcomes) {
+        // Disabled edits had no effect and are kept exactly as given.
+        if !entry.enabled {
+            edits.push(entry.clone());
+            continue;
+        }
         let op = match (&entry.op, outcome) {
             (EditOp::Trim { r#in, out }, _) => EditOp::Trim {
                 r#in: src(r#in),

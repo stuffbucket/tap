@@ -32,7 +32,8 @@ tap-eval redact session.tap sk-live-4f9a2b      # planned edits + what remains
 ```
 
 `--edits` takes an `edits.json` document or a JSON array of ops; without it
-the recording's own list is used. `apply` writes a package when edits remain
+the recording's own list is used. Disabled entries are skipped by evaluation
+and kept exactly as given by every save and export, `apply` included. `apply` writes a package when edits remain
 (time edits, masks, the skips excisions leave), since the `.tap` JSON form
 holds no edits. `preview` with no edits prints exactly `tap-index
 transcript`'s output after a duration line; `tap transcript` is unchanged.
