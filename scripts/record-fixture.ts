@@ -97,6 +97,32 @@ const FIXTURE_LIST: Fixture[] = [
     args: ["--input-policy", "redact"],
     steps: [{ type: "echo secret-value" }, { type: "false" }],
   },
+  {
+    // The byte-changing edits in crates/tap-eval test against this session:
+    // which commands can be excised, what state an excision must restore,
+    // where a secret can be rewritten and where it can only be masked.
+    name: "edits",
+    description: "zsh with shell integration: terminal state, a secret, a TUI, a clear, a Kitty image and absolute positioning",
+    args: [],
+    steps: [
+      // Title, palette entry 1, cursor keys mode, G1 = DEC special graphics,
+      // working directory, Kitty keyboard flags and an underline cursor.
+      { type: "printf '\\e]2;tap title\\a\\e]4;1;rgb:12/34/56\\a\\e[?1h\\e)0\\e]7;file://fixture/tmp\\a\\e[=5;1u\\e[4 q'" },
+      { type: "echo next" },
+      // A secret typed and printed.
+      { type: "echo token sk-live-4f9a2b" },
+      // The same secret printed with a colour change inside it.
+      { type: "printf 'key=sk-live-\\e[31m4f9a2b\\e[0m\\n'" },
+      { type: "printf 'wide: 日本語 ok\\n'" },
+      // The secret drawn by a full-screen program, split by cursor addressing.
+      { type: "printf '\\e[?1049h\\e[5;5Hsk-live\\e[5;12H-4f9a2b'; sleep 1.2; printf '\\e[?1049l'" },
+      { type: "clear" },
+      // A Kitty image transmitted by one command and placed again by the next,
+      // which also positions the cursor absolutely.
+      { type: "printf '\\e_Ga=T,f=24,s=1,v=1,i=31,q=2;AAAA\\e\\\\'; echo image" },
+      { type: "printf '\\e[3;1H\\e_Ga=p,i=31,q=2\\e\\\\placed\\n'" },
+    ],
+  },
 ]
 
 const ZSHRC = `# Written by scripts/record-fixture.ts
