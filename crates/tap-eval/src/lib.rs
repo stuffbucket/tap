@@ -272,8 +272,14 @@ fn time_of(stream: &PaneStream, byte: u64) -> u64 {
     }
 }
 
-/// A planned replacement: its entry, its rewrites, and `expect`.
-type Planned = (usize, Vec<replace::Rewrite>, String);
+/// A planned replacement: its entry, its rewrites, `expect`, and the OSC
+/// field (with the sequence's source bytes) when it rewrites one.
+type Planned = (
+    usize,
+    Vec<replace::Rewrite>,
+    String,
+    Option<(replace::Field, Range<u64>)>,
+);
 
 struct ExciseCandidate {
     index: usize,
@@ -562,6 +568,14 @@ fn evaluate_pane(
     // Replacements: plan each against the raw runs, then drop those inside
     // an excision or overlapping an earlier replacement.
     let runs = pane.runs()?;
+    let fields = if mine
+        .clone()
+        .any(|(_, e)| matches!(e.op, EditOp::ReplaceText { .. }))
+    {
+        replace::osc_fields(&stream.bytes)
+    } else {
+        Vec::new()
+    };
     let mut replaces: Vec<Planned> = Vec::new();
     for (index, entry) in mine.clone() {
         let EditOp::ReplaceText {
@@ -594,12 +608,24 @@ fn evaluate_pane(
             });
             continue;
         }
+        if let Some(planned) = replace::plan_in_field(&fields, &range, text) {
+            match planned {
+                Ok((field, splices)) => replaces.push((
+                    index,
+                    splices,
+                    expect.clone(),
+                    Some((field.field, field.osc.clone())),
+                )),
+                Err(reason) => outcomes[index] = Some(Outcome::NeedsMask { reason }),
+            }
+            continue;
+        }
         match replace::plan(runs, &stream.bytes, &range, text) {
-            Ok(splices) => replaces.push((index, splices, expect.clone())),
+            Ok(splices) => replaces.push((index, splices, expect.clone(), None)),
             Err(reason) => outcomes[index] = Some(Outcome::NeedsMask { reason }),
         }
     }
-    replaces.sort_by_key(|(index, splices, _)| (splices.first().map(|s| s.0.start), *index));
+    replaces.sort_by_key(|(index, splices, _, _)| (splices.first().map(|s| s.0.start), *index));
     let mut kept: Vec<Planned> = Vec::new();
     for replace in replaces {
         let span =
@@ -626,7 +652,7 @@ fn evaluate_pane(
                 op: e.index,
             })
             .collect();
-        for (index, parts, _) in &kept {
+        for (index, parts, _, _) in &kept {
             splices.extend(parts.iter().map(|(source, bytes)| Splice {
                 source: source.clone(),
                 bytes: bytes.clone(),
@@ -655,7 +681,7 @@ fn evaluate_pane(
             inputs_removed: removed_count.get(&e.index).copied().unwrap_or(0),
         });
     }
-    for (index, _, _) in &kept {
+    for (index, _, _, _) in &kept {
         let ranges: Vec<Range<u64>> = program
             .splices()
             .iter()
@@ -826,24 +852,29 @@ fn fix(
     Ok(Ok(fixups))
 }
 
-/// Refolds the edited program and reads the cells each replacement drew,
-/// right after drawing them. Returns the replacements whose text is not
-/// `expect`, with what it is.
+/// Refolds the edited program and reads what each replacement made: the
+/// cells it drew, right after drawing them, or the value the terminal
+/// reads back from the OSC field it rewrote. Returns the replacements that
+/// do not read `expect`, with what they read.
 fn verify_replacements(
     edited: &PaneStream,
     program: &PaneProgram,
     kept: &[Planned],
 ) -> Result<Vec<(usize, String)>, EvalError> {
+    let ranges_of = |index: usize| -> Vec<Range<u64>> {
+        program
+            .splices()
+            .iter()
+            .enumerate()
+            .filter(|(_, s)| s.op == index)
+            .map(|(k, _)| program.splice_range(k))
+            .collect()
+    };
     let mut stops: Vec<(u64, u64, usize, &str)> = kept
         .iter()
-        .filter_map(|(index, _, expect)| {
-            let ranges: Vec<Range<u64>> = program
-                .splices()
-                .iter()
-                .enumerate()
-                .filter(|(_, s)| s.op == *index)
-                .map(|(k, _)| program.splice_range(k))
-                .collect();
+        .filter(|k| k.3.is_none())
+        .filter_map(|(index, _, expect, _)| {
+            let ranges = ranges_of(*index);
             Some((
                 ranges.first()?.start,
                 ranges.last()?.end,
@@ -854,17 +885,84 @@ fn verify_replacements(
         .collect();
     stops.sort();
     let mut failed = Vec::new();
-    if stops.is_empty() {
+    if !stops.is_empty() {
+        let mut replay = Replay::start(edited, Scrollback::Unlimited)?;
+        for (start, end, index, expect) in stops {
+            replay.run_to_position(byte_position(edited, start))?;
+            let first = next_cell(&replay.term);
+            replay.run_to_position(end_position(edited, end))?;
+            let last = last_cell(&replay.term);
+            let found = replay.term.text_between(first, last);
+            if found.trim_end() != expect.trim_end() {
+                failed.push((index, found));
+            }
+        }
+    }
+
+    // OSC fields: the value the terminal keeps, read just after the
+    // sequence (the command line through the mark the index reads).
+    let mut fields: Vec<(u64, u64, usize, &str, replace::Field)> = kept
+        .iter()
+        .filter_map(|(index, _, expect, field)| {
+            let (field, osc) = field.as_ref()?;
+            let (Location::Kept(start), Location::Kept(end)) =
+                (program.locate(osc.start), program.locate(osc.end))
+            else {
+                return None;
+            };
+            Some((start, end, *index, expect.as_str(), *field))
+        })
+        .collect();
+    fields.sort_by_key(|f| (f.0, f.1, f.2));
+    if fields.is_empty() {
         return Ok(failed);
     }
+    let mut marks = None;
     let mut replay = Replay::start(edited, Scrollback::Unlimited)?;
-    for (start, end, index, expect) in stops {
-        replay.run_to_position(byte_position(edited, start))?;
-        let first = next_cell(&replay.term);
-        replay.run_to_position(end_position(edited, end))?;
-        let last = last_cell(&replay.term);
-        let found = replay.term.text_between(first, last);
-        if found.trim_end() != expect.trim_end() {
+    for (start, end, index, expect, field) in fields {
+        let found = match field {
+            replace::Field::CommandLine => {
+                if marks.is_none() {
+                    marks = Some(tap_index::scan::scan(edited)?);
+                }
+                marks
+                    .iter()
+                    .flatten()
+                    .find_map(|m| match &m.kind {
+                        tap_index::MarkKind::CommandStart { command } if m.byte == start => {
+                            Some(command.clone().unwrap_or_default())
+                        }
+                        _ => None,
+                    })
+                    .unwrap_or_default()
+            }
+            replace::Field::Title | replace::Field::WorkingDirectory => {
+                let at = if end >= edited.len() {
+                    Position {
+                        item: edited.items.len(),
+                        intra: 0,
+                    }
+                } else {
+                    byte_position(edited, end)
+                };
+                replay.run_to_position(at)?;
+                let value = if field == replace::Field::Title {
+                    replay.term.title_bytes()
+                } else {
+                    replay.term.pwd()
+                };
+                String::from_utf8_lossy(&value).into_owned()
+            }
+            // Not kept by the terminal: what was written is what there is.
+            replace::Field::IconName => ranges_of(index)
+                .iter()
+                .map(|r| {
+                    String::from_utf8_lossy(&edited.bytes[r.start as usize..r.end as usize])
+                        .into_owned()
+                })
+                .collect(),
+        };
+        if found != expect {
             failed.push((index, found));
         }
     }

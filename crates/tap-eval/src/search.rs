@@ -38,6 +38,12 @@ pub struct Occurrence {
     /// where a mask is anchored.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub anchor: Option<u64>,
+    /// The stream bytes of the characters that drew it, merged where they
+    /// are contiguous, when every cell could be traced: for plain text the
+    /// one range, for text drawn in pieces (a full-screen program
+    /// addressing the cursor between them) one range per piece.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub pieces: Option<Vec<Range<u64>>>,
     /// Cells it takes.
     pub cells: u32,
     /// Source time it was drawn (plain) or seen (on the screen).
@@ -74,8 +80,10 @@ pub fn find_text(pane: &PaneIndex, needle: &str) -> Result<Vec<Occurrence>, Eval
         for (t, _) in chain.text.match_indices(needle) {
             let (run, start) = byte_at(t);
             let (_, last) = byte_at(t + needle.len() - last_len);
+            let bytes = start..last + last_len as u64;
             found.push(Occurrence {
-                plain: Some(start..last + last_len as u64),
+                plain: Some(bytes.clone()),
+                pieces: Some(Vec::from([bytes])),
                 anchor: Some(start),
                 cells,
                 at_us: run.at_us,
@@ -154,8 +162,54 @@ pub fn find_text(pane: &PaneIndex, needle: &str) -> Result<Vec<Occurrence>, Eval
                 continue;
             }
             seen.push(key);
+            // Trace every cell. The second cell of a wide character is not
+            // its own source.
+            let cols = replay.term.size().0;
+            let mut pieces: Option<Vec<Range<u64>>> = Some(Vec::new());
+            let (mut cell, mut skip) = (m.start, 0u8);
+            loop {
+                if skip > 0 {
+                    skip -= 1;
+                } else {
+                    let source = runs.cell_source(
+                        &stream.bytes,
+                        before,
+                        epoch,
+                        alternate,
+                        (cell.0, cell.1 + shift),
+                    );
+                    match (source, pieces.as_mut()) {
+                        (Some(source), Some(list)) => {
+                            let wide = std::str::from_utf8(
+                                &stream.bytes
+                                    [source.bytes.start as usize..source.bytes.end as usize],
+                            )
+                            .ok()
+                            .and_then(|c| c.chars().next())
+                            .is_some_and(|c| codepoint_width(c) == 2);
+                            skip = u8::from(wide);
+                            match list.last_mut() {
+                                Some(last) if last.end == source.bytes.start => {
+                                    last.end = source.bytes.end;
+                                }
+                                _ => list.push(source.bytes),
+                            }
+                        }
+                        _ => pieces = None,
+                    }
+                }
+                if cell == m.end || pieces.is_none() {
+                    break;
+                }
+                cell = if cell.0 + 1 >= cols {
+                    (0, cell.1 + 1)
+                } else {
+                    (cell.0 + 1, cell.1)
+                };
+            }
             found.push(Occurrence {
                 plain: None,
+                pieces,
                 anchor,
                 cells,
                 at_us,

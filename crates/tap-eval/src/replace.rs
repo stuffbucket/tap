@@ -14,6 +14,11 @@
 //!
 //! Anything else is refused with [`NeedsMask`]: the text has to be covered
 //! at render time instead.
+//!
+//! Text inside an OSC string that is never drawn but that the terminal
+//! keeps (a title, the working directory, the command line in an OSC 133;C
+//! mark; see [`Field`]) can be rewritten whatever its width: `expect` is
+//! then the value the terminal reads back after the rewrite.
 
 use std::ops::Range;
 
@@ -45,7 +50,8 @@ pub enum NeedsMask {
         /// Index of the event in the pane.
         event: usize,
     },
-    /// The replacement contains control characters.
+    /// The replacement contains control characters (or, rewriting OSC 133
+    /// options, a `;`).
     NotPrintable,
     /// The replacement does not take the same cells as the original.
     WidthMismatch {
@@ -196,4 +202,78 @@ pub fn plan(
         return Err(mismatch());
     }
     Ok(splices)
+}
+
+/// A value inside an OSC string that is never drawn, which a replacement
+/// may rewrite whatever its width: the terminal stores it, so the
+/// evaluator checks what the terminal reads back.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum Field {
+    /// OSC 0 or 2: the title, read back as the terminal's title.
+    Title,
+    /// OSC 1: the icon name, which libghostty-vt does not keep; checked by
+    /// its bytes.
+    IconName,
+    /// OSC 7: the working directory, read back as the terminal's.
+    WorkingDirectory,
+    /// The options of OSC 133;C (`cmdline=`, `cmdline_url=`), read back as
+    /// the command line libghostty-vt decodes from them.
+    CommandLine,
+}
+
+/// An OSC string whose value is a [`Field`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OscField {
+    /// What the value is.
+    pub field: Field,
+    /// The whole sequence, ESC to terminator.
+    pub osc: Range<u64>,
+    /// The value: after `0;`, `1;`, `2;` or `7;`, or the options after
+    /// `133;C;`.
+    pub value: Range<u64>,
+}
+
+/// Every OSC field of a stream (which starts at ground).
+pub fn osc_fields(stream: &[u8]) -> Vec<OscField> {
+    crate::tokens::tokens(stream)
+        .filter_map(|(range, token)| {
+            let crate::tokens::Token::Osc(payload) = token else {
+                return None;
+            };
+            let (field, prefix): (Field, &[u8]) = match payload {
+                [b'0' | b'2', b';', ..] => (Field::Title, &payload[..2]),
+                [b'1', b';', ..] => (Field::IconName, &payload[..2]),
+                [b'7', b';', ..] => (Field::WorkingDirectory, &payload[..2]),
+                _ if payload.starts_with(b"133;C;") => (Field::CommandLine, b"133;C;"),
+                _ => return None,
+            };
+            let start = range.start as u64 + 2 + prefix.len() as u64;
+            Some(OscField {
+                field,
+                osc: range.start as u64..range.end as u64,
+                value: start..start + (payload.len() - prefix.len()) as u64,
+            })
+        })
+        .collect()
+}
+
+/// The rewrite of `range` inside an OSC field, if it lies inside one's
+/// value: the whole range replaced by `text`, which must hold no control
+/// characters (and, in OSC 133 options, no `;`).
+pub fn plan_in_field<'f>(
+    fields: &'f [OscField],
+    range: &Range<u64>,
+    text: &str,
+) -> Option<Result<(&'f OscField, Vec<Rewrite>), NeedsMask>> {
+    let k = fields.partition_point(|f| f.osc.end <= range.start);
+    let field = fields.get(k)?;
+    if range.start < field.value.start || range.end > field.value.end {
+        return None;
+    }
+    let unsafe_char = |c: char| c.is_control() || (field.field == Field::CommandLine && c == ';');
+    if text.chars().any(unsafe_char) {
+        return Some(Err(NeedsMask::NotPrintable));
+    }
+    Some(Ok((field, vec![(range.clone(), text.as_bytes().to_vec())])))
 }

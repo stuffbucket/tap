@@ -93,12 +93,25 @@ fn plan_delete_and_redact_print_json() {
     let (ok, out, err) = run(&["redact", path, "sk-live-4f9a2b"]);
     assert!(ok, "{err}");
     let redaction: serde_json::Value = serde_json::from_str(&out).unwrap();
-    assert_eq!(redaction["edits"].as_array().unwrap().len(), 5);
-    assert_eq!(redaction["report"]["replaced"], 3);
-    assert_eq!(
-        redaction["report"]["remaining"][0]["context"],
-        "inside OSC 133;C (not drawn)"
-    );
+    assert_eq!(redaction["edits"].as_array().unwrap().len(), 7);
+    assert_eq!(redaction["report"]["replaced"], 6);
+    assert_eq!(redaction["report"]["remaining"], serde_json::json!([]));
+    assert!(!out.contains("sk-live-4f9a2b"));
+
+    // Previewing the plan prints no copy of it either.
+    let edits = temp("redaction.json");
+    std::fs::write(&edits, redaction["edits"].to_string()).unwrap();
+    for json in [false, true] {
+        let mut args = vec!["preview", path, "--edits", edits.to_str().unwrap()];
+        if json {
+            args.push("--json");
+        }
+        let (ok, out, err) = run(&args);
+        assert!(ok, "{err}");
+        assert!(out.contains("echo token ••••••••••••••"), "{out}");
+        assert!(!out.contains("sk-live-4f9a2b"), "{out}");
+    }
+    std::fs::remove_file(&edits).unwrap();
 }
 
 #[test]

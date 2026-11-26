@@ -157,14 +157,25 @@ A replacement rewrites only printable bytes, in place:
   after it is drawn (plain text, wraps joined, trailing blanks trimmed),
   must equal `expect`; else `ExpectMismatch` with what they read.
 
+**Values the terminal keeps but never draws.** A range inside the value of
+an OSC 0/2 title, OSC 1 icon name, OSC 7 working directory, or the options
+of an OSC 133;C mark is rewritten whatever its width, as long as the text
+holds no control characters (and, in OSC 133 options, no `;`). `expect` is
+then the value read back after the sequence: the terminal's title or
+working directory, the command line libghostty-vt decodes from the mark
+(the one the transcript shows), or for the icon name, which libghostty-vt
+does not keep, the bytes written.
+
 An excision covering the range supersedes it; of two overlapping
 replacements the earlier one (in source order) wins.
 
 **Search.** `search::find_text` finds a string in the runs' text (plain,
 rewritable occurrences) and with libghostty-vt's search over the screen and
 scrollback just before each clear, reset, screen switch and resize, at each
-segment's end and at the end of the pane, tracing each screen match's first
-cell to the byte that drew it (a mask anchor).
+segment's end and at the end of the pane. Each cell of a screen match is
+traced to the character that drew it, giving the match's pieces (as many
+as cursor movements split it into) and the byte that drew its first cell
+(a mask anchor).
 
 ## RedactInput and masks
 
@@ -181,13 +192,29 @@ empty while the other screen is active, ending when the cell is gone.
 
 ## Redaction
 
-`redact::plan` hides a string everywhere: bullets of the same width where it
-is plain text, a mask where that is refused or it was drawn in pieces, and
-`RedactInput` for the input events that typed it. Its report lists what
-remains: bytes still in the output (masked, or inside a sequence such as
-the command line in OSC 133;C, which the transcript's command text still
-shows), input events still holding it, and screen matches no byte could be
-traced to.
+`redact::plan` hides a string everywhere it can be recovered from the
+edited program:
+
+- bullets of the same width where it was drawn as plain text, and in each
+  piece where a program drew it in pieces;
+- in OSC 133;C marks whose command line, as libghostty-vt decodes it
+  (`cmdline_url` percent-encoded, `cmdline` quoted as by printf `%q`),
+  holds it: each `cmdline=`/`cmdline_url=` option becomes `cmdline_url=`
+  with the redacted command line, percent-encoded, so the mark stays and
+  the transcript shows bullets;
+- in OSC 0/1/2 titles and OSC 7 working directories (matched on the
+  percent-decoded value, the rest of the value kept as spelled);
+- a mask where a rewrite of drawn text is refused, anchored to its first
+  byte;
+- `RedactInput` for the input events that typed it.
+
+Its report lists what remains in the edited program: output bytes holding
+it in any spelling (masked, or inside a sequence it could not rewrite),
+input events still holding it, and screen matches no byte could be traced
+to. **The raw events still hold the secret**: they are never changed, so a
+`Session.tap/` package (or `.tap` file) of the recording itself carries it.
+Only what is built from the edited program (its index and transcript,
+`bake` and `tap-eval apply`) is clean.
 
 ## Tests
 
@@ -200,8 +227,16 @@ traced to.
   unreadable state and an end inside a sequence.
 - `tests/replace.rs`: rewrites, SGR kept inside, width mismatch,
   cursor-addressed text, a wrong `expect`.
-- `tests/redact.rs`: the plan, the mask's spans, and an export holding the
-  secret only where the report says.
+- `tests/redact.rs`: the plan; that the secret, as is or percent-encoded,
+  is nowhere in the edited program's output or kept input, its transcript
+  (text and JSON) and index JSON, or the files of a baked package or
+  `.tap` export (while the raw events still hold it); titles, icon names,
+  working directories and a `%q`-quoted command line rewritten; a mask's
+  spans.
+- `tests/playback.rs`: byte coordinates count the playback stream; edits
+  across a normalised Kitty file transfer are refused; exports keep it.
+- `tests/disabled.rs`: disabled entries of every kind survive every save
+  and export.
 - `tests/eval.rs`: unedited sessions (no edits, or time-only edits) index,
   transcribe, checkpoint and seek byte for byte as before; seek over edited
   programs equals a replay from the start at every event and checkpoint;
@@ -219,7 +254,9 @@ traced to.
 - A screen match whose cells moved since they were drawn (reflow, insert or
   delete line, scrolling regions) cannot be traced to a byte, so it is
   reported, not masked.
-- `redact::plan` cannot rewrite text inside sequences, such as OSC 133;C
-  command lines; it reports them.
+- `redact::plan` rewrites only the sequences above; a secret inside any
+  other (a hyperlink URI, a DCS, OSC 52) is reported, not rewritten. A
+  `cmdline=` value it cannot decode (libghostty-vt reports no command) is
+  not matched.
 - Fixups are computed with a replay per excision, so excising many commands
   of a long session is slow.
