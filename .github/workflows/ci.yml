@@ -1,0 +1,61 @@
+# Checks every pull request and every push to main.
+#
+# - bun: builds the native helpers (libghostty-vt vt-1.0.1, the Cairo/CoreText
+#   renderer, the VHS parser) and runs `bun run check` (typecheck + tests).
+#   macOS only: the renderer uses CoreText, and Tap ships for macOS.
+# - rust: formats, lints and tests the Cargo workspace on macOS and Linux.
+#
+# Actions are pinned by commit SHA; the comment names the release.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bun:
+    runs-on: macos-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: brew install cairo libpng
+      - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
+      - name: Cache the libghostty-vt build
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .cache
+          key: native-${{ runner.os }}-${{ hashFiles('scripts/build-native.ts', 'mise.toml') }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build:native
+      - run: bun run build:vhs
+      - run: bun run check
+
+  rust:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      # rustup reads rust-toolchain.toml and installs the pinned toolchain.
+      - run: rustup show active-toolchain || rustup toolchain install
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+      - run: cargo fmt --all --check
+      - run: cargo clippy --workspace --all-targets --locked -- -D warnings
+      - run: cargo test --workspace --locked
