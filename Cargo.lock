@@ -438,6 +438,8 @@ name = "tap-index"
 version = "0.1.0"
 dependencies = [
  "libghostty-vt",
+ "serde",
+ "tap-model",
 ]
 
 [[package]]

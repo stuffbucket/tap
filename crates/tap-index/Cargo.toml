@@ -9,6 +9,8 @@ publish.workspace = true
 repository.workspace = true
 
 [dependencies]
+serde = { version = "1", features = ["derive"] }
+tap-model = { path = "../tap-model" }
 # libghostty-rs at the commit that builds Ghostty vt-1.0.1 (Ghostty commit
 # 108cacb17ed8990840cd14abfce43d8ed8503ca1), the libghostty-vt Tap pins.
 # Only src/vt.rs uses it.
