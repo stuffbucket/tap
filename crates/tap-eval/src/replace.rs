@@ -39,6 +39,12 @@ pub enum NeedsMask {
         /// Where the next piece starts.
         byte: u64,
     },
+    /// The range crosses an output event whose recorded bytes differ from
+    /// the bytes it plays (a Kitty file transfer normalised at capture).
+    PlaybackDiffers {
+        /// Index of the event in the pane.
+        event: usize,
+    },
     /// The replacement contains control characters.
     NotPrintable,
     /// The replacement does not take the same cells as the original.

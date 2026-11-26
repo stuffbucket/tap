@@ -93,7 +93,10 @@ informational: derived caches are keyed by the engine that builds them.
 
 Each op is tagged by `"op"` with camelCase fields; every anchor is a source
 coordinate, `{"us": n}` or `{"byte": {"pane": id, "offset": n}}` (an offset into
-the pane's concatenated raw `output` bytes). `"enabled": false` keeps an entry
+the pane's *playback stream*: each `output` event's `playbackData` when it has
+one, its `data` otherwise, concatenated; the stream that is replayed and
+indexed). Every byte coordinate in the list (segments, byte ranges, mask
+anchors) counts that stream. `"enabled": false` keeps an entry
 without effect. The full op list is `tap_model::edl::EditOp`.
 
 ## `.tlog` byte layout (version 1)

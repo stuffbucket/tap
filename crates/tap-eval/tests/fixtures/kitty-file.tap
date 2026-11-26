@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "title": "tap-eval fixture: a Kitty file transfer with playbackData",
+  "createdAt": "2026-11-26T00:00:00.000Z",
+  "durationUs": 1000000,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "background": "#101014",
+    "fps": 60
+  },
+  "panes": [
+    {
+      "id": "main",
+      "cols": 80,
+      "rows": 24,
+      "fontSize": 16,
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "events": [
+        {
+          "atUs": 100000,
+          "type": "output",
+          "data": "G10xMzM7UAckIA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 200000,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "show\r"
+        },
+        {
+          "atUs": 300000,
+          "type": "output",
+          "data": "c2hvdw0KG10xMzM7Qwc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 400000,
+          "type": "output",
+          "data": "G19HYT1ULHQ9ZixmPTMyLHM9MSx2PTEscT0yO0wzUnRjQzk0TG5KblltRT0bXA==",
+          "encoding": "base64",
+          "playbackData": "G19HYT1ULGY9MzIscz0xLHY9MSxxPTI7QUFBQS93PT0bXA==",
+          "playbackEncoding": "base64"
+        },
+        {
+          "atUs": 500000,
+          "type": "output",
+          "data": "c2hvd24NChtdMTMzO0Q7MAc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 600000,
+          "type": "output",
+          "data": "G10xMzM7UAckIA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 700000,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "next\r"
+        },
+        {
+          "atUs": 800000,
+          "type": "output",
+          "data": "bmV4dA0KG10xMzM7QwdwbGFpbiB0ZXh0DQobXTEzMztEOzAH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 900000,
+          "type": "output",
+          "data": "G10xMzM7UAckIA==",
+          "encoding": "base64"
+        }
+      ]
+    }
+  ],
+  "overlays": [],
+  "metadata": {
+    "terminal": "ghostty",
+    "terminalEngine": "libghostty-vt 1.0.1",
+    "timebase": "microseconds",
+    "source": "interactive-pty"
+  }
+}

@@ -32,9 +32,12 @@ pub enum Src {
     /// The moment a pane's output byte was recorded:
     /// `{"byte": {"pane": "main", "offset": 4096}}`.
     ///
-    /// `offset` counts bytes of the pane's raw output stream (the
-    /// concatenated `data` of its `output` events, not `playbackData`) and
-    /// resolves to the `at_us` of the event that carries that byte.
+    /// `offset` counts bytes of the pane's *playback stream*: each `output`
+    /// event's `playbackData` when it has one, its `data` otherwise,
+    /// concatenated in event order. That is the stream that is replayed and
+    /// indexed, and every byte coordinate in the edit list ([`SegId`],
+    /// [`ByteRange`], [`TrackedRef`]) counts the same bytes. It resolves to
+    /// the `at_us` of the event that carries that byte.
     Byte {
         /// The pane whose output stream is meant.
         pane: PaneId,
@@ -79,7 +82,8 @@ pub enum Rate {
 }
 
 /// A command segment, identified by its source byte range in one pane's
-/// output so the reference survives re-segmentation.
+/// playback stream (see [`Src::Byte`]) so the reference survives
+/// re-segmentation.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SegId {
@@ -91,7 +95,8 @@ pub struct SegId {
     pub end: u64,
 }
 
-/// A half-open range of byte offsets in a pane's output stream.
+/// A half-open range of byte offsets in a pane's playback stream (see
+/// [`Src::Byte`]).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ByteRange {
@@ -116,7 +121,8 @@ pub struct SeqRange {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TrackedRef {
-    /// Offset of the byte in the pane's output stream.
+    /// Offset of the byte in the pane's playback stream (see
+    /// [`Src::Byte`]).
     pub byte: u64,
 }
 

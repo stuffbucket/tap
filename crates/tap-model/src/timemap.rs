@@ -262,16 +262,24 @@ impl SourceTimeline {
     }
 
     /// Adds a pane's events: their times count as activity (except markers),
-    /// and its output bytes become addressable by [`Src::Byte`].
+    /// and its playback stream's bytes become addressable by [`Src::Byte`].
     pub fn add_pane(&mut self, pane: &PaneId, events: &[RawEvent]) {
         let mut offsets = Vec::new();
         let mut end = 0u64;
         for event in events {
             match &event.kind {
                 EventKind::Marker { .. } => continue,
-                EventKind::Output(output) if !output.data.is_empty() => {
-                    end += output.data.len() as u64;
-                    offsets.push((end, event.at_us));
+                EventKind::Output(output) => {
+                    // The playback stream: what is replayed and indexed.
+                    let len = output
+                        .playback
+                        .as_ref()
+                        .map_or(&output.data, |p| &p.data)
+                        .len();
+                    if len > 0 {
+                        end += len as u64;
+                        offsets.push((end, event.at_us));
+                    }
                 }
                 _ => {}
             }

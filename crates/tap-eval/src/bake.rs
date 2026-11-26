@@ -7,11 +7,14 @@
 //! origin kept) and whose excised commands' input events are dropped. The
 //! raw session is not touched.
 //!
-//! Its edit list keeps what still applies to the new bytes: time-only ops
-//! and masks, with byte anchors moved to program offsets, and every
-//! excision as the skip of its time. Byte-changing ops are applied and
-//! dropped, and so are rewrites that need a mask (the caller should mask
-//! them; see [`crate::redact`]).
+//! Output events no edit touched are kept exactly as recorded
+//! (`playbackData` and encodings included).
+//!
+//! Its edit list keeps what still applies to the new bytes: enabled
+//! time-only ops and masks, with byte anchors moved to program offsets, and
+//! every enabled excision as the skip of its time. Enabled byte-changing ops
+//! are applied and dropped, and so are those that did not apply (rewrites
+//! that need a mask, edits superseded by another, masks that cover nothing).
 
 use tap_model::Session;
 use tap_model::edl::{EditEntry, EditOp, Src, SrcRange, TrackedRef};
@@ -63,6 +66,17 @@ pub fn bake(
                         _ => 0,
                     };
                     let data = played[item.offset as usize..(item.offset + len) as usize].to_vec();
+                    // An event no edit touched keeps exactly what was
+                    // recorded, `playbackData` and encodings included.
+                    let raw_item = &pane.stream().items[index];
+                    if let tap_index::stream::ItemKind::Output { len: raw_len } = raw_item.kind
+                        && pane.stream_bytes()
+                            [raw_item.offset as usize..(raw_item.offset + raw_len) as usize]
+                            == data[..]
+                    {
+                        kept.push(event);
+                        continue;
+                    }
                     let encoding = if std::str::from_utf8(&data).is_ok() {
                         output.data_encoding
                     } else {
@@ -79,7 +93,7 @@ pub fn bake(
                     Some(InputEdit::Redacted { .. }) => {
                         *input = Input {
                             data: Vec::new(),
-                            data_encoding: TextEncoding::Unspecified,
+                            data_encoding: input.data_encoding,
                             origin: input.origin,
                             redacted: Some(true),
                         };

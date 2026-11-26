@@ -407,6 +407,31 @@ fn evaluate_pane(
         .iter()
         .enumerate()
         .filter(|(_, e)| e.enabled && e.op.panes().iter().all(|p| **p == pane.pane));
+    // Output events whose recorded bytes differ from the bytes they play:
+    // no splice may touch them.
+    let differing: Vec<(usize, Range<u64>)> = events
+        .iter()
+        .enumerate()
+        .filter_map(
+            |(index, event)| match (&event.kind, &stream.items[index].kind) {
+                (tap_model::EventKind::Output(o), ItemKind::Output { len })
+                    if o.playback.as_ref().is_some_and(|p| p.data != o.data) =>
+                {
+                    let at = stream.items[index].offset;
+                    Some((index, at..at + len))
+                }
+                _ => None,
+            },
+        )
+        .collect();
+    let crossing = |range: &Range<u64>| {
+        differing
+            .iter()
+            .find(|(_, bytes)| {
+                overlaps(bytes, range) || (range.is_empty() && bytes.contains(&range.start))
+            })
+            .cloned()
+    };
 
     // Excisions: static preconditions, then overlaps (the earliest start
     // wins).
@@ -431,9 +456,13 @@ fn evaluate_pane(
             time_of(stream, range.start),
             time_of(stream, range.end),
         ));
+        let mut refusals = excise::check(pane, &range);
+        if let Some((event, bytes)) = crossing(&range) {
+            refusals.push(Refusal::PlaybackDiffers { event, bytes });
+        }
         candidates.push(ExciseCandidate {
             index,
-            refusals: excise::check(pane, &range),
+            refusals,
             range,
         });
     }
@@ -559,6 +588,12 @@ fn evaluate_pane(
             outcomes[index] = Some(Outcome::Superseded { by: e.index });
             continue;
         }
+        if let Some((event, _)) = crossing(&range) {
+            outcomes[index] = Some(Outcome::NeedsMask {
+                reason: NeedsMask::PlaybackDiffers { event },
+            });
+            continue;
+        }
         match replace::plan(runs, &stream.bytes, &range, text) {
             Ok(splices) => replaces.push((index, splices, expect.clone())),
             Err(reason) => outcomes[index] = Some(Outcome::NeedsMask { reason }),
@@ -647,6 +682,14 @@ fn evaluate_pane(
             continue;
         };
         let at = anchor.byte;
+        if let Some((event, _)) = crossing(&(at..at + 1)) {
+            outcomes[index] = Some(Outcome::Inert {
+                reason: format!(
+                    "byte {at} is in event {event}, whose recorded bytes differ from the bytes it plays"
+                ),
+            });
+            continue;
+        }
         let printed = at < raw_len
             && runs.runs.iter().any(|r| {
                 r.bytes.contains(&at)

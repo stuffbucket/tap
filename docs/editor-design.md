@@ -169,7 +169,7 @@ Idle gaps between blocks are editable objects, like Descript's word gaps: drag t
 
 ### Edits: a non-destructive EDL
 
-Every op is anchored to **source coordinates** (pane plus byte offset, or source µs), never to edited time. Ops therefore commute, and re-segmenting does not break them.
+Every op is anchored to **source coordinates** (pane plus byte offset, or source µs), never to edited time. Byte offsets count the pane's playback stream (`playbackData` where capture normalised Kitty file media, `data` otherwise), the bytes that are replayed and indexed; an edit that would splice bytes whose recorded and playback forms differ is refused. Ops therefore commute, and re-segmenting does not break them.
 
 ```rust
 enum EditOp {

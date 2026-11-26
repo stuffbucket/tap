@@ -128,6 +128,16 @@ pub enum Refusal {
         /// The components that differ.
         states: Vec<String>,
     },
+    /// The range crosses an output event whose recorded bytes (`data`)
+    /// differ from the bytes it plays (`playbackData`: a Kitty file
+    /// transfer normalised at capture). Byte coordinates count the playback
+    /// bytes, but splicing them would leave the recorded ones inconsistent.
+    PlaybackDiffers {
+        /// Index of the event in the pane.
+        event: usize,
+        /// Its playback bytes.
+        bytes: Range<u64>,
+    },
     /// Another excision overlaps it.
     Overlaps {
         /// Index of that edit.

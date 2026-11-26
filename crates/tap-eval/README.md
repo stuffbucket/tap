@@ -95,6 +95,12 @@ applied), which is always exact. Either way the range's time is cut.
 6. **Readable state**: see below.
 7. **Fixups exist and work**: see below.
 8. **No overlap** with an earlier excision.
+9. **Recorded bytes are what plays**: the range crosses no output event
+   whose `data` differs from its `playbackData` (a Kitty file transfer
+   normalised at capture). Byte coordinates count the playback stream, so
+   splicing there would leave the recorded bytes saying something else.
+   ReplaceText (`NeedsMask::PlaybackDiffers`) and mask anchors are refused
+   there too.
 
 **State carried across the splice.** The state the original reaches at the
 end of the range is diffed against the state the edited program has where
@@ -214,8 +220,5 @@ traced to.
   reported, not masked.
 - `redact::plan` cannot rewrite text inside sequences, such as OSC 133;C
   command lines; it reports them.
-- Byte offsets in tap-model's `Src::Byte` count `data` bytes; the index
-  counts `playbackData` when an event has it (Kitty file media). They agree
-  for every other recording.
 - Fixups are computed with a replay per excision, so excising many commands
   of a long session is slow.
