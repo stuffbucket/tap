@@ -1,0 +1,2342 @@
+{
+  "version": 1,
+  "title": "kitty-animation.tape",
+  "createdAt": "2026-11-26T06:38:43.053Z",
+  "durationUs": 1538797,
+  "canvas": {
+    "width": 960,
+    "height": 540,
+    "background": "#101014",
+    "fps": 120
+  },
+  "presentation": {
+    "padding": 0,
+    "margin": 0,
+    "marginFill": "#101014",
+    "borderRadius": 0,
+    "windowBar": "none",
+    "windowBarSize": 0,
+    "shadow": 0,
+    "cursorBlink": false,
+    "loopOffsetPercent": 0
+  },
+  "panes": [
+    {
+      "id": "main",
+      "title": "kitty-animation.tape",
+      "cols": 80,
+      "rows": 24,
+      "fontSize": 16,
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "events": [
+        {
+          "atUs": 31062,
+          "type": "output",
+          "data": "c2gtMy4yJCA=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 125376,
+          "type": "visibility",
+          "visible": false
+        },
+        {
+          "atUs": 125426,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 125609,
+          "type": "output",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 126609,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 126666,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 127755,
+          "type": "input",
+          "origin": "vhs",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 127812,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 128898,
+          "type": "input",
+          "origin": "vhs",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 128968,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 130040,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 130069,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 131199,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 131262,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 132352,
+          "type": "input",
+          "origin": "vhs",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 132444,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 133497,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 133557,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 134638,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 134660,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 135771,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 135792,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 136902,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 136929,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 138041,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 138073,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 139200,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 139258,
+          "type": "output",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 140350,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 140432,
+          "type": "output",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 141497,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 141528,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 142645,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 142678,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 143789,
+          "type": "input",
+          "origin": "vhs",
+          "data": "VA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 143842,
+          "type": "output",
+          "data": "VA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 144941,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 144976,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 146086,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 146111,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 147226,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 147247,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 148365,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 148396,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 149505,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 149536,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 150646,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 150691,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 151780,
+          "type": "input",
+          "origin": "vhs",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 151814,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 152925,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 152950,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 154072,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 154104,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 155212,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 155238,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 156345,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 156377,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 157477,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 157517,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 158615,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 158652,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 159748,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 159769,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 160891,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 160944,
+          "type": "output",
+          "data": "dg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 162031,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 162081,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 163194,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 163279,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 164356,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 164483,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 165540,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 165581,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 166684,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 166716,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 167820,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 167841,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 168962,
+          "type": "input",
+          "origin": "vhs",
+          "data": "NA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 168986,
+          "type": "output",
+          "data": "NA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 170096,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 170122,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 171228,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 171249,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 172367,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 172393,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 173500,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 173523,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 174630,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 174646,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 175758,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 175773,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 176888,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 176902,
+          "type": "output",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 178023,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 178046,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 179097,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 179151,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 180228,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 180260,
+          "type": "output",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 181373,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 181399,
+          "type": "output",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 182519,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 182540,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 183654,
+          "type": "input",
+          "origin": "vhs",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 183672,
+          "type": "output",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 184776,
+          "type": "input",
+          "origin": "vhs",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 184793,
+          "type": "output",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 185908,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 185929,
+          "type": "output",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 187044,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 187086,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 188177,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 188201,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 189310,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 189329,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 190448,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 190466,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 191579,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 191603,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 192710,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 192724,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 193842,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 193861,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 194974,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 194997,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 196105,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 196126,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 197239,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 197255,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 198374,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 198389,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 199506,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 199522,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 200640,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 200660,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 201771,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 201803,
+          "type": "output",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 202911,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 202938,
+          "type": "output",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 204050,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 204093,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 205187,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 205209,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 206318,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 206350,
+          "type": "output",
+          "data": "ZiAN",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 207451,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 207468,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 208585,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 208605,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 209719,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 209736,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 210852,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 210881,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 211988,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 212024,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 213123,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 213155,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 214256,
+          "type": "input",
+          "origin": "vhs",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 214281,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 215385,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 215399,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 216516,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 216531,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 217645,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 217658,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 218773,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 218790,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 219911,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 220028,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 221054,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 221100,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 222194,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 222270,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 223360,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 223424,
+          "type": "output",
+          "data": "dg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 224524,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 224581,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 225693,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 225755,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 226872,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 226935,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 228037,
+          "type": "input",
+          "origin": "vhs",
+          "data": "eg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 228085,
+          "type": "output",
+          "data": "eg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 229207,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 229253,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 230367,
+          "type": "input",
+          "origin": "vhs",
+          "data": "NA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 230399,
+          "type": "output",
+          "data": "NA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 231546,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 231589,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 232707,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 232764,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 233848,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 233882,
+          "type": "output",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 234996,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 235033,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 236146,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 236186,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 237301,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 237360,
+          "type": "output",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 238470,
+          "type": "input",
+          "origin": "vhs",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 238557,
+          "type": "output",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 239619,
+          "type": "input",
+          "origin": "vhs",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 239675,
+          "type": "output",
+          "data": "QQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 240781,
+          "type": "input",
+          "origin": "vhs",
+          "data": "RA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 240833,
+          "type": "output",
+          "data": "RA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 241983,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 242055,
+          "type": "output",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 243131,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 243170,
+          "type": "output",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 244269,
+          "type": "input",
+          "origin": "vhs",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 244350,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 245672,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 245735,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 246836,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 246912,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 247998,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 248045,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 249137,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 249187,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 250282,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 250328,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 251423,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 251477,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 252573,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 252633,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 253724,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 253770,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 254903,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 254949,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 256042,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 256087,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 257173,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 257243,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 258335,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 258396,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 259394,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 259456,
+          "type": "output",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 260548,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 260598,
+          "type": "output",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 261698,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 261742,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 262840,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 262915,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 264004,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 264062,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 265200,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 265251,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 266339,
+          "type": "input",
+          "origin": "vhs",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 266391,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 267487,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 267541,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 268628,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 268693,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 269803,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 269854,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 270974,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 271031,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 272117,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 272168,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 273254,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 273295,
+          "type": "output",
+          "data": "MQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 274384,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 274424,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 275533,
+          "type": "input",
+          "origin": "vhs",
+          "data": "eg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 275600,
+          "type": "output",
+          "data": "eg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 276669,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 276740,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 277808,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 277881,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 278940,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 279016,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 280011,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 280092,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 281158,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 281278,
+          "type": "output",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 282320,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 282419,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 283372,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 283507,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 284504,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 284577,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 285648,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 285706,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 286787,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 286846,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 287927,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 288021,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 289067,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 289163,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 290157,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 290230,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 291315,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 291381,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 292454,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 292510,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 293597,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 293666,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 294728,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 294776,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 295866,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 295922,
+          "type": "output",
+          "data": "Xw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 297002,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 297088,
+          "type": "output",
+          "data": "Rw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 298132,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 298246,
+          "type": "output",
+          "data": "YSAN",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 299265,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 299337,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 300443,
+          "type": "input",
+          "origin": "vhs",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 300516,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 301614,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 301707,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 302758,
+          "type": "input",
+          "origin": "vhs",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 302790,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 303897,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 303979,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 305038,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 305093,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 306174,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 306227,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 307316,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 307365,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 308508,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 308546,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 309647,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 309680,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 310786,
+          "type": "input",
+          "origin": "vhs",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 310826,
+          "type": "output",
+          "data": "LA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 311922,
+          "type": "input",
+          "origin": "vhs",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 311980,
+          "type": "output",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 313069,
+          "type": "input",
+          "origin": "vhs",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 313120,
+          "type": "output",
+          "data": "PQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 314207,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 314273,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 315368,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 315428,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 316516,
+          "type": "input",
+          "origin": "vhs",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 316565,
+          "type": "output",
+          "data": "MA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 317668,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 317736,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 318813,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 318886,
+          "type": "output",
+          "data": "Mw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 319951,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 320018,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 321086,
+          "type": "input",
+          "origin": "vhs",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 321168,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 322228,
+          "type": "input",
+          "origin": "vhs",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 322290,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 323981,
+          "type": "input",
+          "origin": "vhs",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 324109,
+          "type": "output",
+          "data": "DQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 324576,
+          "type": "output",
+          "data": "G19HYT1ULGY9MzIsaT0yLHM9MSx2PTEsYz0yNCxyPTEwLHE9Mjsvd0FBL3c9PRtcG19HYT1mLGY9MzIsaT0yLHM9MSx2PTEsej00MCxxPTI7QUFELy93PT0bXBtfR2E9YSxpPTIscj0xLHo9MzAscT0yG1wbX0dhPWEsaT0yLHM9MyxxPTIbXA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 324602,
+          "type": "output",
+          "data": "c2gtMy4yJCA=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 425960,
+          "type": "visibility",
+          "visible": true
+        },
+        {
+          "atUs": 1427251,
+          "type": "marker",
+          "label": "Screenshot: kitty-animation.png"
+        }
+      ]
+    }
+  ],
+  "overlays": [],
+  "metadata": {
+    "terminal": "ghostty",
+    "terminalEngine": "libghostty-vt 1.0.1 native renderer; ghostty-web live capture",
+    "timebase": "microseconds",
+    "source": "vhs-tape"
+  }
+}

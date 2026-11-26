@@ -1,6 +1,6 @@
 # Tap editor: design direction
 
-Status: proposal (2026-11-24). Nothing here is implemented yet. It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
+Status: proposal (2026-11-24). Implemented so far: OSC 133 shell integration at capture, and `crates/tap-model` (the `Session.tap/` package, legacy import and export, the EDL and the time map for time-only ops; its [README](../crates/tap-model/README.md) specifies the on-disk format). It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
 
 ## What we are building
 
@@ -129,7 +129,8 @@ Session.tap/
 
 - Autosave writes `edits.json` atomically.
 - Raw events are authoritative and never change. Everything under `index/`, `checkpoints/` and `thumbs/` can be deleted and rebuilt.
-- Old `.tap` JSON imports by splitting into `events` and an empty `edits.json`.
+- Old `.tap` JSON imports by splitting into `events` and an `edits.json` with an empty edit list (presentation and overlays move there).
+- `crates/tap-model/README.md` gives the exact byte layout of `.tlog` and the versioning rules.
 - On macOS the package is registered as a document bundle; on Linux and Windows it is a plain directory.
 
 ### Segmentation: turning bytes into commands

@@ -1,0 +1,7 @@
+# Rust pin for crates/. Run cargo through mise so no global Rust default is
+# needed: `mise x rust@1.99.0 -- cargo test`. Keep this channel and that
+# version together.
+[toolchain]
+channel = "1.99.0"
+components = ["rustfmt", "clippy"]
+profile = "minimal"
