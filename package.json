@@ -23,7 +23,8 @@
     "build:app": "bun scripts/build-app.ts",
     "verify:dmg": "bun scripts/verify-dmg.ts",
     "typecheck": "tsc --noEmit",
-    "check": "bun run typecheck && bun run test"
+    "check": "bun run typecheck && bun run test",
+    "check:rust": "cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test"
   },
   "dependencies": {
     "@napi-rs/canvas": "1.0.11",
