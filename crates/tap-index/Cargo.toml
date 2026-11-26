@@ -20,6 +20,7 @@ libghostty-vt = { git = "https://github.com/Uzaaft/libghostty-rs", rev = "81eaf6
 
 [dev-dependencies]
 base64 = "0.22"
+proptest = "1"
 
 [lints]
 workspace = true

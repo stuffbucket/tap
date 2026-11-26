@@ -8,6 +8,8 @@
 use tap_model::PaneId;
 use tap_model::event::{EventKind, InputOrigin, RawEvent};
 
+use crate::program::{InputEdit, PaneProgram};
+
 /// One event, as the index sees it. `items[i]` is the pane's event `i`.
 #[derive(Debug, Clone)]
 pub struct Item {
@@ -61,6 +63,9 @@ pub struct PaneStream {
     pub bytes: Vec<u8>,
     /// End of the recording in microseconds.
     pub end_us: u64,
+    /// The edits that turn the raw stream into [`PaneStream::bytes`]; the
+    /// identity for an unedited pane.
+    pub program: PaneProgram,
 }
 
 impl PaneStream {
@@ -101,12 +106,99 @@ impl PaneStream {
             })
             .collect();
         let end_us = events.last().map_or(end_us, |e| end_us.max(e.at_us));
+        let program = PaneProgram::identity(bytes.len() as u64);
         Self {
             pane,
             initial_size,
             items,
             bytes,
             end_us,
+            program,
+        }
+    }
+
+    /// The raw stream's length, for building a [`PaneProgram`] over it.
+    pub fn raw_len(events: &[RawEvent]) -> u64 {
+        events
+            .iter()
+            .map(|event| match &event.kind {
+                EventKind::Output(output) => output
+                    .playback
+                    .as_ref()
+                    .map_or(&output.data, |p| &p.data)
+                    .len() as u64,
+                _ => 0,
+            })
+            .sum()
+    }
+
+    /// The stream an edited pane plays: `program` applied to the raw stream
+    /// of `events`. Every event keeps its item; each output event plays the
+    /// program bytes derived from its source bytes
+    /// ([`PaneProgram::boundary`]), so an event can play nothing. Withheld
+    /// input events lose their bytes, or (when their command was excised)
+    /// become [`ItemKind::Other`]. With the identity program this is exactly
+    /// [`PaneStream::new`].
+    pub fn with_program(
+        pane: PaneId,
+        initial_size: (u16, u16),
+        events: &[RawEvent],
+        end_us: u64,
+        program: PaneProgram,
+    ) -> Self {
+        let raw = Self::new(pane, initial_size, events, end_us);
+        if program.is_identity() {
+            return raw;
+        }
+        assert_eq!(
+            program.source_len(),
+            raw.len(),
+            "a program must be built over the pane's raw stream"
+        );
+        let bytes = program.render(&raw.bytes);
+        let items = raw
+            .items
+            .iter()
+            .enumerate()
+            .map(|(index, item)| {
+                let offset = program.boundary(item.offset);
+                let kind = match &item.kind {
+                    ItemKind::Output { len } => ItemKind::Output {
+                        len: program.boundary(item.offset + len) - offset,
+                    },
+                    ItemKind::Input {
+                        data,
+                        origin,
+                        redacted,
+                    } => match program.inputs().get(&index) {
+                        None => ItemKind::Input {
+                            data: data.clone(),
+                            origin: *origin,
+                            redacted: *redacted,
+                        },
+                        Some(InputEdit::Redacted { .. }) => ItemKind::Input {
+                            data: Vec::new(),
+                            origin: *origin,
+                            redacted: true,
+                        },
+                        Some(InputEdit::Removed { .. }) => ItemKind::Other,
+                    },
+                    other => other.clone(),
+                };
+                Item {
+                    at_us: item.at_us,
+                    kind,
+                    offset,
+                }
+            })
+            .collect();
+        Self {
+            pane: raw.pane,
+            initial_size,
+            items,
+            bytes,
+            end_us: raw.end_us,
+            program,
         }
     }
 
