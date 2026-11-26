@@ -25,26 +25,32 @@
 
 mod id;
 pub mod line_editor;
+pub mod program;
 pub mod replay;
+pub mod runs;
 pub mod scan;
 pub mod segment;
 pub mod stream;
 pub mod transcript;
 pub mod vt;
 
+use std::collections::BTreeMap;
 use std::path::Path;
+use std::sync::OnceLock;
 
 use serde::Serialize;
 use tap_model::{PaneId, Session};
 
-pub use replay::{Checkpoint, CheckpointKey, Checkpoints, Position};
+pub use program::{Attach, InputEdit, Location, Origin, PaneProgram, ProgramError, Splice};
+pub use replay::{Checkpoint, CheckpointKey, Checkpoints, Position, Replay};
+pub use runs::{Chain, Run, Runs};
 pub use scan::{Mark, MarkKind};
 pub use segment::{BoundarySource, Segment, SegmentKind};
 pub use transcript::{Block, CommandSource, CommandText, Durations, Transcript, TuiSpan};
 pub use vt::Scrollback;
 pub use vt::VtError;
 
-use replay::{Checkpointer, Replay};
+use replay::Checkpointer;
 use segment::Segmentation;
 use stream::{ItemKind, PaneStream};
 use transcript::Captured;
@@ -110,6 +116,8 @@ pub struct PaneIndex {
     blocks: Vec<Block>,
     #[serde(skip)]
     stream: PaneStream,
+    #[serde(skip)]
+    runs: OnceLock<Runs>,
 }
 
 impl PaneIndex {
@@ -122,6 +130,26 @@ impl PaneIndex {
     /// The transcript blocks of this pane.
     pub fn blocks(&self) -> &[Block] {
         &self.blocks
+    }
+
+    /// The pane's stream and events, as replays see them.
+    pub fn stream(&self) -> &PaneStream {
+        &self.stream
+    }
+
+    /// The edits the stream plays (the identity for an unedited pane).
+    pub fn program(&self) -> &PaneProgram {
+        &self.stream.program
+    }
+
+    /// The stream's printable runs ([`runs`]), folded the first time they
+    /// are asked for.
+    pub fn runs(&self) -> Result<&Runs, VtError> {
+        if let Some(runs) = self.runs.get() {
+            return Ok(runs);
+        }
+        let runs = runs::fold(&self.stream)?;
+        Ok(self.runs.get_or_init(|| runs))
     }
 }
 
@@ -178,15 +206,35 @@ impl SessionIndex {
 
     /// Indexes every pane of a session.
     pub fn build_with(session: &Session, options: IndexOptions) -> Result<Self, IndexError> {
+        Self::build_programs(session, &BTreeMap::new(), options)
+    }
+
+    /// Indexes what an edited session plays: each pane's [`PaneProgram`]
+    /// from `programs` (panes it does not list play their raw stream).
+    /// Every offset in the result (chunks, marks, inputs, segments,
+    /// checkpoint keys) is a program offset, and checkpoints are keyed by
+    /// the program's prefix hash. A session whose programs are all the
+    /// identity indexes exactly as [`SessionIndex::build_with`].
+    pub fn build_programs(
+        session: &Session,
+        programs: &BTreeMap<PaneId, PaneProgram>,
+        options: IndexOptions,
+    ) -> Result<Self, IndexError> {
         let engine = vt::engine_fingerprint(options.scrollback);
         let mut checkpoints = Checkpoints::new(engine.clone());
         let mut panes = Vec::new();
         for info in &session.manifest.panes {
-            let stream = PaneStream::new(
+            let events = session.pane_events(&info.id);
+            let program = programs
+                .get(&info.id)
+                .cloned()
+                .unwrap_or_else(|| PaneProgram::identity(PaneStream::raw_len(events)));
+            let stream = PaneStream::with_program(
                 info.id.clone(),
                 (info.cols, info.rows),
-                session.pane_events(&info.id),
+                events,
                 session.manifest.duration_us,
+                program,
             );
             panes.push(index_pane(stream, options.scrollback, &mut checkpoints)?);
         }
@@ -320,6 +368,7 @@ fn index_pane(
         segments: segmentation.segments,
         blocks,
         stream,
+        runs: OnceLock::new(),
     })
 }
 

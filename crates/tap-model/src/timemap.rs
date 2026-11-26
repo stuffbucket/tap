@@ -37,9 +37,12 @@
 //!   or inside a cut is *inert*: it has no effect, and its index is reported
 //!   by [`TimeMap::inert_ops`]. Holds are never scaled by speed.
 //!
-//! Disabled entries are ignored. Byte-changing and render-time ops, typing
+//! Disabled entries are ignored. An enabled entry marked `preBake` (see
+//! [`crate::edl::PRE_BAKE`]) is refused with [`EvalError::Invalid`]. Byte-changing and render-time ops, typing
 //! retiming and speed ramps make [`TimeMap::build`] fail with
-//! [`EvalError::Unsupported`], listing every such op.
+//! [`EvalError::Unsupported`], listing every such op. `tap-eval` evaluates
+//! whole edit lists: it builds this map from the time-only ops plus a skip
+//! for every excision, and refuses only typing retiming and speed ramps.
 //!
 //! ## Overlaps and order
 //!
@@ -260,16 +263,24 @@ impl SourceTimeline {
     }
 
     /// Adds a pane's events: their times count as activity (except markers),
-    /// and its output bytes become addressable by [`Src::Byte`].
+    /// and its playback stream's bytes become addressable by [`Src::Byte`].
     pub fn add_pane(&mut self, pane: &PaneId, events: &[RawEvent]) {
         let mut offsets = Vec::new();
         let mut end = 0u64;
         for event in events {
             match &event.kind {
                 EventKind::Marker { .. } => continue,
-                EventKind::Output(output) if !output.data.is_empty() => {
-                    end += output.data.len() as u64;
-                    offsets.push((end, event.at_us));
+                EventKind::Output(output) => {
+                    // The playback stream: what is replayed and indexed.
+                    let len = output
+                        .playback
+                        .as_ref()
+                        .map_or(&output.data, |p| &p.data)
+                        .len();
+                    if len > 0 {
+                        end += len as u64;
+                        offsets.push((end, event.at_us));
+                    }
                 }
                 _ => {}
             }
@@ -380,9 +391,9 @@ fn unsupported(op: &EditOp) -> Option<&'static str> {
         } => Some("speed ramps are not supported yet"),
         EditOp::RetimeTyping { .. } => Some("needs typing segments from the index"),
         EditOp::Excise { .. } | EditOp::ReplaceText { .. } | EditOp::RedactInput { .. } => {
-            Some("changes bytes; needs the byte program")
+            Some("changes bytes; tap-eval evaluates it with the time map")
         }
-        EditOp::Mask { .. } => Some("render-time; applied by the compositor"),
+        EditOp::Mask { .. } => Some("render-time; tap-eval resolves it"),
     }
 }
 
@@ -435,6 +446,13 @@ impl TimeMap {
             return Err(EvalError::Unsupported(rejected));
         }
 
+        if let Some((index, entry)) = enabled().find(|(_, e)| e.pre_bake) {
+            return Err(EvalError::Invalid {
+                index,
+                op: entry.op.name(),
+                reason: crate::edl::PRE_BAKE.into(),
+            });
+        }
         let duration = timeline.duration_us();
         let (mut lo, mut lo_by, mut hi, mut hi_by) = (0, 0, duration, 0);
         let mut cuts = Vec::new();

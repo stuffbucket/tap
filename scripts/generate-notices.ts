@@ -26,7 +26,7 @@ const libghosttyRs = await download("libghostty-rs-LICENSE.txt", "https://raw.gi
 
 const components: Array<{ name: string; source: string; license: string; files: string[]; note?: string }> = [
   { name: "Ghostty and libghostty-vt", source: "https://github.com/ghostty-org/ghostty", license: "MIT", files: [resolve(root, ".cache/libghostty-vt-src/LICENSE")] },
-  { name: "libghostty-rs (libghostty-vt Rust bindings)", source: "https://github.com/Uzaaft/libghostty-rs", license: "MIT", files: [libghosttyRs], note: "Used by the tap-index tool (crates/tap-index), which is built from source and not yet part of Tap.app." },
+  { name: "libghostty-rs (libghostty-vt Rust bindings)", source: "https://github.com/Uzaaft/libghostty-rs", license: "MIT", files: [libghosttyRs], note: "Used by the tap-index and tap-eval tools (crates/tap-index, crates/tap-eval), which are built from source and not yet part of Tap.app." },
   { name: "Charmbracelet VHS", source: "https://github.com/charmbracelet/vhs", license: "MIT", files: [resolve(root, ".cache/vhs-upstream-0.12.1/LICENSE")] },
   { name: "Termless", source: "https://github.com/beorn/termless", license: "MIT", files: [resolve(root, "node_modules/@termless/core/LICENSE")] },
   { name: "ghostty-web", source: "https://github.com/coder/ghostty-web", license: "MIT", files: [resolve(root, "node_modules/@termless/ghostty/node_modules/ghostty-web/LICENSE")] },

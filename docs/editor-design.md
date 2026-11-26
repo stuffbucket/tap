@@ -1,6 +1,6 @@
 # Tap editor: design direction
 
-Status: proposal (2026-11-24). Implemented so far: OSC 133 shell integration at capture; `crates/tap-model` (the `Session.tap/` package, legacy import and export, the EDL and the time map for time-only ops; its [README](../crates/tap-model/README.md) specifies the on-disk format); and `crates/tap-index` (marks, segmentation, the transcript, in-memory checkpoints and seek, and `tap transcript`; its [README](../crates/tap-index/README.md) describes the rules). Not yet: evaluation of byte-changing ops, thumbnails, rendering, the foreground-process-group lane, and checkpoints on disk. It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
+Status: proposal (2026-11-24). Implemented so far: OSC 133 shell integration at capture; `crates/tap-model` (the `Session.tap/` package, legacy import and export, the EDL and the time map for time-only ops; its [README](../crates/tap-model/README.md) specifies the on-disk format); `crates/tap-index` (marks, segmentation, the transcript, byte programs, printable runs, in-memory checkpoints and seek, and `tap transcript`; its [README](../crates/tap-index/README.md) describes the rules); and `crates/tap-eval` (evaluation of the whole EDL: excise with state fixups, replace text, redact input, mask regions, the secret redaction planner, export of edited sessions, and the `tap-eval` tool; its [README](../crates/tap-eval/README.md) describes the rules). Not yet: typing retiming and speed ramps, thumbnails, rendering, the foreground-process-group lane, and checkpoints on disk. It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
 
 ## What we are building
 
@@ -169,7 +169,7 @@ Idle gaps between blocks are editable objects, like Descript's word gaps: drag t
 
 ### Edits: a non-destructive EDL
 
-Every op is anchored to **source coordinates** (pane plus byte offset, or source µs), never to edited time. Ops therefore commute, and re-segmenting does not break them.
+Every op is anchored to **source coordinates** (pane plus byte offset, or source µs), never to edited time. Byte offsets count the pane's playback stream (`playbackData` where capture normalised Kitty file media, `data` otherwise), the bytes that are replayed and indexed; an edit that would splice bytes whose recorded and playback forms differ is refused. Ops therefore commute, and re-segmenting does not break them.
 
 ```rust
 enum EditOp {
@@ -198,13 +198,14 @@ Evaluation produces two things:
 
 - **Skip (jump cut)**: always exact. The skipped bytes apply instantly, but their output stays in scrollback.
 - **Excise (never happened)**: allowed only at clean boundaries:
-  - prompt mark to prompt mark;
+  - prompt mark to prompt mark (or the end of the output);
   - parser at ground;
   - primary screen;
   - no Kitty image transmitted inside and used later;
-  - the next block does no absolute cursor positioning before a clear.
+  - nothing after it positions the cursor absolutely on the primary screen before a clear;
+  - no change to state libghostty-vt cannot read back that matters later (a saved cursor or saved modes restored later, an unbalanced Kitty keyboard stack).
 
-  State the block left changed (modes, Kitty keyboard flags, palette, title, cwd, character sets) is diffed and written back as fixup bytes at the splice. If any condition fails, the edit becomes a skip and the transcript says so. Deleting a block in the transcript tries excise first.
+  State the block left changed (modes, Kitty keyboard flags, palette and dynamic colours, title, cwd, character sets, scrolling region, tab stops, cursor shape, pen style) is diffed and written back as fixup bytes at the splice, and the state is read again to check them. If any condition fails, the edit becomes a skip and the result lists every reason. Deleting a block in the transcript tries excise first (`tap_eval::plan_delete`).
 
 **Editing text inside output** is applied in this order:
 

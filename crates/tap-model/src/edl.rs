@@ -17,6 +17,12 @@
 //!
 //! An entry may carry `"enabled": false`; disabled entries are kept in the
 //! list (so the UI can offer them again) but have no effect.
+//!
+//! An entry may also carry `"preBake": true`: it was copied from a recording
+//! that was later baked into this one (its byte-changing edits applied to
+//! the bytes), and its byte coordinates could not be moved onto the new
+//! bytes, so they still count the old ones. Such an entry is kept so nothing
+//! is lost, but it is never evaluated: see [`PRE_BAKE`].
 
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -32,9 +38,12 @@ pub enum Src {
     /// The moment a pane's output byte was recorded:
     /// `{"byte": {"pane": "main", "offset": 4096}}`.
     ///
-    /// `offset` counts bytes of the pane's raw output stream (the
-    /// concatenated `data` of its `output` events, not `playbackData`) and
-    /// resolves to the `at_us` of the event that carries that byte.
+    /// `offset` counts bytes of the pane's *playback stream*: each `output`
+    /// event's `playbackData` when it has one, its `data` otherwise,
+    /// concatenated in event order. That is the stream that is replayed and
+    /// indexed, and every byte coordinate in the edit list ([`SegId`],
+    /// [`ByteRange`], [`TrackedRef`]) counts the same bytes. It resolves to
+    /// the `at_us` of the event that carries that byte.
     Byte {
         /// The pane whose output stream is meant.
         pane: PaneId,
@@ -79,7 +88,8 @@ pub enum Rate {
 }
 
 /// A command segment, identified by its source byte range in one pane's
-/// output so the reference survives re-segmentation.
+/// playback stream (see [`Src::Byte`]) so the reference survives
+/// re-segmentation.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SegId {
@@ -91,7 +101,8 @@ pub struct SegId {
     pub end: u64,
 }
 
-/// A half-open range of byte offsets in a pane's output stream.
+/// A half-open range of byte offsets in a pane's playback stream (see
+/// [`Src::Byte`]).
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ByteRange {
@@ -116,7 +127,8 @@ pub struct SeqRange {
 #[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TrackedRef {
-    /// Offset of the byte in the pane's output stream.
+    /// Offset of the byte in the pane's playback stream (see
+    /// [`Src::Byte`]).
     pub byte: u64,
 }
 
@@ -197,23 +209,33 @@ pub enum EditOp {
         /// How long to hold it.
         duration_us: u64,
     },
-    /// Byte-changing. Remove a command as if it never happened.
+    /// Byte-changing. Remove a command as if it never happened: the bytes
+    /// from one OSC 133 prompt mark to the next (or the end of the output)
+    /// are not played, fixups restore the terminal state they changed, and
+    /// their time is cut. When that cannot be exact it plays as a skip; see
+    /// `crates/tap-eval`.
     Excise {
         /// The command's segment.
         segment: SegId,
     },
-    /// Byte-changing. Replace output text, checked against `expect`.
+    /// Byte-changing. Replace output text in place, checked against
+    /// `expect`. Only text drawn as plain text, replaced by text taking the
+    /// same cells, can be; otherwise it needs a mask (see `crates/tap-eval`).
     ReplaceText {
         /// The pane.
         pane: PaneId,
-        /// The output bytes to replace.
+        /// The output bytes to replace: printable characters, and the SGR
+        /// sequences between them, which are kept.
         bytes: ByteRange,
         /// The replacement text.
         text: String,
-        /// What the formatter must read after the replacement.
+        /// What the cells those bytes draw must read (plain text, soft
+        /// wraps joined, trailing blanks trimmed) right after they are
+        /// drawn with the replacement.
         expect: String,
     },
-    /// Byte-changing. Withhold the bytes of some input events.
+    /// Byte-changing. Withhold the bytes of some input events (their time
+    /// and origin stay, marked redacted), so exports do not carry them.
     RedactInput {
         /// The pane.
         pane: PaneId,
@@ -307,6 +329,9 @@ impl EditOp {
     }
 }
 
+/// Why an entry marked `preBake` is refused when enabled.
+pub const PRE_BAKE: &str = "its byte coordinates count the recording before it was baked into this one, and the bytes they named did not survive; anchor it again to the new bytes or remove it";
+
 /// One entry in the edit list: an op and whether it is switched on.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct EditEntry {
@@ -314,12 +339,28 @@ pub struct EditEntry {
     pub enabled: bool,
     /// The op.
     pub op: EditOp,
+    /// Its byte coordinates count the bytes of the recording before it was
+    /// baked, not this one's, so it is refused when enabled. Serialised as
+    /// `"preBake": true`, only when set.
+    pub pre_bake: bool,
 }
 
 impl EditEntry {
     /// An enabled entry.
     pub fn new(op: EditOp) -> Self {
-        Self { enabled: true, op }
+        Self {
+            enabled: true,
+            op,
+            pre_bake: false,
+        }
+    }
+
+    /// A disabled entry.
+    pub fn disabled(op: EditOp) -> Self {
+        Self {
+            enabled: false,
+            ..Self::new(op)
+        }
     }
 }
 
@@ -332,10 +373,13 @@ impl From<EditOp> for EditEntry {
 impl Serialize for EditEntry {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut value = serde_json::to_value(&self.op).map_err(serde::ser::Error::custom)?;
-        if !self.enabled
-            && let Some(map) = value.as_object_mut()
-        {
-            map.insert("enabled".into(), false.into());
+        if let Some(map) = value.as_object_mut() {
+            if !self.enabled {
+                map.insert("enabled".into(), false.into());
+            }
+            if self.pre_bake {
+                map.insert("preBake".into(), true.into());
+            }
         }
         value.serialize(serializer)
     }
@@ -353,7 +397,20 @@ impl<'de> Deserialize<'de> for EditEntry {
                 )));
             }
         };
+        let pre_bake = match map.remove("preBake") {
+            None => false,
+            Some(serde_json::Value::Bool(b)) => b,
+            Some(other) => {
+                return Err(D::Error::custom(format!(
+                    "`preBake` must be a boolean, not {other}"
+                )));
+            }
+        };
         let op = EditOp::deserialize(serde_json::Value::Object(map)).map_err(D::Error::custom)?;
-        Ok(Self { enabled, op })
+        Ok(Self {
+            enabled,
+            op,
+            pre_bake,
+        })
     }
 }

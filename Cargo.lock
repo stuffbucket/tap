@@ -434,11 +434,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "tap-eval"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tap-index",
+ "tap-model",
+ "thiserror",
+]
+
+[[package]]
 name = "tap-index"
 version = "0.1.0"
 dependencies = [
  "base64",
  "libghostty-vt",
+ "proptest",
  "serde",
  "serde_json",
  "tap-model",

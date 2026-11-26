@@ -353,14 +353,11 @@ fn unsupported_ops_are_listed_not_ignored() {
                 to: Ratio { num: 2, den: 1 },
             },
         }),
-        EditEntry {
-            enabled: false,
-            op: EditOp::RetimeTyping {
-                segment: seg.clone(),
-                cadence_us: 1,
-                jitter_seed: None,
-            },
-        },
+        EditEntry::disabled(EditOp::RetimeTyping {
+            segment: seg.clone(),
+            cadence_us: 1,
+            jitter_seed: None,
+        }),
         EditEntry::new(EditOp::RetimeTyping {
             segment: seg,
             cadence_us: 1,
@@ -410,14 +407,8 @@ fn unsupported_ops_are_listed_not_ignored() {
 #[test]
 fn disabled_entries_have_no_effect() {
     let entries = vec![
-        EditEntry {
-            enabled: false,
-            op: trim(10, 20),
-        },
-        EditEntry {
-            enabled: false,
-            op: speed(0, 100, 9, 1),
-        },
+        EditEntry::disabled(trim(10, 20)),
+        EditEntry::disabled(speed(0, 100, 9, 1)),
     ];
     assert_eq!(
         TimeMap::build(&entries, &SourceTimeline::new(100))

@@ -16,13 +16,17 @@ use std::fmt;
 use std::rc::Rc;
 
 use libghostty_vt as ghostty;
+use libghostty_vt::color::Rgb;
 use libghostty_vt::effect::{PromptKind, SemanticPromptKind};
 use libghostty_vt::fmt::{Extras, Format, Formatter};
 use libghostty_vt::grid_ref::TrackedGridRef;
+use libghostty_vt::mode::{Kind, Mode};
+use libghostty_vt::mouse::Shape;
 use libghostty_vt::point::{Coordinate, Point, Space};
 use libghostty_vt::screen::Screen;
+use libghostty_vt::search::{MatchBuffer, Search};
 use libghostty_vt::selection::Selection;
-use libghostty_vt::terminal::Boundary;
+use libghostty_vt::terminal::{Boundary, CursorStyle};
 
 /// Cell size in pixels given to the terminal on resize. Only pixel-size
 /// reports and image placement depend on it, and the index answers no
@@ -552,5 +556,421 @@ impl Terminal {
             .encode_snapshot_alloc(None)
             .map_err(err("encode snapshot"))?;
         Ok(bytes.map(|b| b.to_vec()).unwrap_or_default())
+    }
+}
+
+/// A terminal mode: its number, whether it is an ANSI mode (`CSI n h`)
+/// rather than a DEC private one (`CSI ? n h`), and whether it is set.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct ModeValue {
+    /// The mode number.
+    pub number: u16,
+    /// ANSI rather than DEC private.
+    pub ansi: bool,
+    /// Whether it is set.
+    pub set: bool,
+}
+
+/// Every mode libghostty-vt recognises (`include/ghostty/vt/modes.h`).
+const MODES: &[(u16, bool)] = &[
+    (2, true),
+    (4, true),
+    (12, true),
+    (20, true),
+    (1, false),
+    (3, false),
+    (4, false),
+    (5, false),
+    (6, false),
+    (7, false),
+    (8, false),
+    (9, false),
+    (12, false),
+    (25, false),
+    (40, false),
+    (45, false),
+    (47, false),
+    (66, false),
+    (67, false),
+    (69, false),
+    (1000, false),
+    (1002, false),
+    (1003, false),
+    (1004, false),
+    (1005, false),
+    (1006, false),
+    (1007, false),
+    (1015, false),
+    (1016, false),
+    (1035, false),
+    (1036, false),
+    (1039, false),
+    (1045, false),
+    (1047, false),
+    (1048, false),
+    (1049, false),
+    (2004, false),
+    (2026, false),
+    (2027, false),
+    (2031, false),
+    (2033, false),
+    (2048, false),
+    (5522, false),
+];
+
+/// An RGB colour.
+pub type Color = [u8; 3];
+
+fn rgb(c: Rgb) -> Color {
+    [c.r, c.g, c.b]
+}
+
+/// The colours OSC 10, 11 and 12 set: `None` when the program has not set
+/// one (the terminal's default applies).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
+pub struct DynamicColors {
+    /// Foreground (OSC 10).
+    pub foreground: Option<Color>,
+    /// Background (OSC 11).
+    pub background: Option<Color>,
+    /// Cursor (OSC 12).
+    pub cursor: Option<Color>,
+}
+
+/// The cursor's shape, as DECSCUSR sets it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum CursorShape {
+    /// Block.
+    Block,
+    /// Underline.
+    Underline,
+    /// Bar.
+    Bar,
+    /// Hollow block (an unfocused block).
+    BlockHollow,
+    /// A shape this module does not know.
+    Other,
+}
+
+/// Terminal state the VT formatter writes as sequences ("extras") and that
+/// has no getter of its own. [`Terminal::state_extra`] returns the
+/// sequences that restore it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum StateExtra {
+    /// G0–G3 designations and the GL and GR invocations.
+    Charsets,
+    /// DECSTBM and DECSLRM.
+    ScrollingRegion,
+    /// Tab stops (clears them all, sets each, homes the cursor).
+    Tabstops,
+    /// modifyOtherKeys.
+    Keyboard,
+    /// The SGR style new text is written with.
+    Style,
+    /// The hyperlink new text is written with.
+    Hyperlink,
+    /// DECSCA character protection.
+    Protection,
+}
+
+impl StateExtra {
+    /// Every extra, in the order [`Terminal::state_extra`] callers apply
+    /// them.
+    pub const ALL: [Self; 7] = [
+        Self::ScrollingRegion,
+        Self::Tabstops,
+        Self::Charsets,
+        Self::Keyboard,
+        Self::Style,
+        Self::Hyperlink,
+        Self::Protection,
+    ];
+
+    fn flags(self) -> Extras {
+        match self {
+            Self::Charsets => Extras::CHARSETS,
+            Self::ScrollingRegion => Extras::SCROLLING_REGION,
+            Self::Tabstops => Extras::TABSTOPS,
+            Self::Keyboard => Extras::KEYBOARD,
+            Self::Style => Extras::STYLE,
+            Self::Hyperlink => Extras::HYPERLINK,
+            Self::Protection => Extras::PROTECTION,
+        }
+    }
+
+    /// Whether the formatter writes it before the screen content (else
+    /// after).
+    fn before_content(self) -> bool {
+        matches!(self, Self::Tabstops)
+    }
+}
+
+/// A match [`Terminal::find`] found on the active screen: its first and
+/// last cell, in screen coordinates (scrollback included).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Found {
+    /// First cell (column, row).
+    pub start: (u16, u32),
+    /// Last cell (column, row).
+    pub end: (u16, u32),
+}
+
+/// Display width of a codepoint in cells, as the terminal lays it out
+/// without grapheme clustering (mode 2027 off, the default): 0, 1 or 2.
+pub fn codepoint_width(c: char) -> u8 {
+    ghostty::unicode::codepoint_width(c)
+}
+
+fn mouse_shape_name(shape: Shape) -> &'static str {
+    match shape {
+        Shape::Default => "default",
+        Shape::ContextMenu => "context-menu",
+        Shape::Help => "help",
+        Shape::Pointer => "pointer",
+        Shape::Progress => "progress",
+        Shape::Wait => "wait",
+        Shape::Cell => "cell",
+        Shape::Crosshair => "crosshair",
+        Shape::Text => "text",
+        Shape::VerticalText => "vertical-text",
+        Shape::Alias => "alias",
+        Shape::Copy => "copy",
+        Shape::Move => "move",
+        Shape::NoDrop => "no-drop",
+        Shape::NotAllowed => "not-allowed",
+        Shape::Grab => "grab",
+        Shape::Grabbing => "grabbing",
+        Shape::AllScroll => "all-scroll",
+        Shape::ColResize => "col-resize",
+        Shape::RowResize => "row-resize",
+        Shape::NResize => "n-resize",
+        Shape::EResize => "e-resize",
+        Shape::SResize => "s-resize",
+        Shape::WResize => "w-resize",
+        Shape::NeResize => "ne-resize",
+        Shape::NwResize => "nw-resize",
+        Shape::SeResize => "se-resize",
+        Shape::SwResize => "sw-resize",
+        Shape::EwResize => "ew-resize",
+        Shape::NsResize => "ns-resize",
+        Shape::NeswResize => "nesw-resize",
+        Shape::NwseResize => "nwse-resize",
+        Shape::ZoomIn => "zoom-in",
+        Shape::ZoomOut => "zoom-out",
+        _ => "",
+    }
+}
+
+impl Terminal {
+    /// Every mode libghostty-vt recognises, with its value.
+    pub fn modes(&self) -> Vec<ModeValue> {
+        MODES
+            .iter()
+            .map(|&(number, ansi)| {
+                let kind = if ansi { Kind::Ansi } else { Kind::Dec };
+                ModeValue {
+                    number,
+                    ansi,
+                    set: self.term.mode(Mode::new(number, kind)).unwrap_or(false),
+                }
+            })
+            .collect()
+    }
+
+    /// The 256-colour palette as OSC 4 and 104 have left it.
+    pub fn palette(&self) -> Vec<Color> {
+        self.term
+            .color_palette()
+            .map(|p| p.0.iter().copied().map(rgb).collect())
+            .unwrap_or_default()
+    }
+
+    /// The palette OSC 104 restores.
+    pub fn default_palette(&self) -> Vec<Color> {
+        self.term
+            .default_color_palette()
+            .map(|p| p.0.iter().copied().map(rgb).collect())
+            .unwrap_or_default()
+    }
+
+    /// The colours OSC 10–12 set.
+    pub fn dynamic_colors(&self) -> DynamicColors {
+        let set = |current: Option<Rgb>, default: Option<Rgb>| {
+            current.filter(|c| Some(*c) != default).map(rgb)
+        };
+        DynamicColors {
+            foreground: set(
+                self.term.fg_color().ok().flatten(),
+                self.term.default_fg_color().ok().flatten(),
+            ),
+            background: set(
+                self.term.bg_color().ok().flatten(),
+                self.term.default_bg_color().ok().flatten(),
+            ),
+            cursor: set(
+                self.term.cursor_color().ok().flatten(),
+                self.term.default_cursor_color().ok().flatten(),
+            ),
+        }
+    }
+
+    /// The Kitty keyboard protocol flags of the active screen (the top of
+    /// its stack; the entries below are not readable).
+    pub fn kitty_keyboard_flags(&self) -> u8 {
+        self.term
+            .kitty_keyboard_flags()
+            .map(|f| f.bits())
+            .unwrap_or(0)
+    }
+
+    /// The title's bytes, as OSC 0/2 set them.
+    pub fn title_bytes(&self) -> Vec<u8> {
+        self.term.title().map(<[u8]>::to_vec).unwrap_or_default()
+    }
+
+    /// The working directory, as OSC 7 set it (the raw URI).
+    pub fn pwd(&self) -> Vec<u8> {
+        self.term.pwd().map(<[u8]>::to_vec).unwrap_or_default()
+    }
+
+    /// The mouse pointer shape OSC 22 set, by its OSC 22 name.
+    pub fn mouse_shape(&self) -> &'static str {
+        self.term.mouse_shape().map_or("", mouse_shape_name)
+    }
+
+    /// The cursor's shape and whether it blinks.
+    pub fn cursor_shape(&self) -> (CursorShape, bool) {
+        let Ok(mut state) = ghostty::RenderState::new() else {
+            return (CursorShape::Other, false);
+        };
+        let Ok(snapshot) = state.update(&self.term) else {
+            return (CursorShape::Other, false);
+        };
+        let shape = match snapshot.cursor_visual_style() {
+            Ok(CursorStyle::Block) => CursorShape::Block,
+            Ok(CursorStyle::Underline) => CursorShape::Underline,
+            Ok(CursorStyle::Bar) => CursorShape::Bar,
+            Ok(CursorStyle::BlockHollow) => CursorShape::BlockHollow,
+            _ => CursorShape::Other,
+        };
+        (shape, snapshot.cursor_blinking().unwrap_or(false))
+    }
+
+    /// Whether the cursor is in the last column with a wrap pending.
+    pub fn cursor_pending_wrap(&self) -> bool {
+        self.term.is_cursor_pending_wrap().unwrap_or(false)
+    }
+
+    /// The sequences the VT formatter writes to restore one piece of state
+    /// (empty when it is at its default). They are what the formatter adds
+    /// to the screen content for that extra alone.
+    pub fn state_extra(&self, extra: StateExtra) -> Vec<u8> {
+        let cell = || {
+            self.term
+                .grid_ref(Point::Active(Coordinate { x: 0, y: 0 }))
+                .ok()
+                .map(|r| Selection::new(&self.term, r, r, false))
+        };
+        let format = |extras: Extras| -> Vec<u8> {
+            let Ok(mut formatter) = Formatter::new(&self.term) else {
+                return Vec::new();
+            };
+            let configured = formatter
+                .set_format(Format::Vt)
+                .and_then(|f| f.set_unwrap(false))
+                .and_then(|f| f.set_trim(true))
+                .and_then(|f| f.set_extras(extras))
+                .and_then(|f| f.set_selection(cell()));
+            if configured.is_err() {
+                return Vec::new();
+            }
+            formatter
+                .format_alloc(None)
+                .map(|bytes| bytes.to_vec())
+                .unwrap_or_default()
+        };
+        let content = format(Extras::NONE);
+        let full = format(extra.flags());
+        if extra.before_content() {
+            full.strip_suffix(content.as_slice())
+                .unwrap_or(&full)
+                .to_vec()
+        } else {
+            full.strip_prefix(content.as_slice())
+                .unwrap_or(&full)
+                .to_vec()
+        }
+    }
+
+    /// Rows of history above the active area.
+    pub fn history_rows(&self) -> u32 {
+        let rows = usize::from(self.size().1);
+        u32::try_from(self.total_rows().saturating_sub(rows)).unwrap_or(u32::MAX)
+    }
+
+    /// The cursor in screen coordinates (column, row with scrollback).
+    pub fn cursor_on_screen(&self) -> (u16, u32) {
+        let (x, y) = self.cursor();
+        (x, self.history_rows() + u32::from(y))
+    }
+
+    /// Pins a cell given in screen coordinates.
+    pub fn pin(&self, x: u16, y: u32) -> Option<Pin> {
+        self.term
+            .track_grid_ref(Point::Screen(Coordinate { x, y }))
+            .ok()
+            .map(Pin)
+    }
+
+    /// Where a pinned cell is now, in screen coordinates; `None` once the
+    /// cell is gone.
+    pub fn pin_position(&self, pin: &Pin) -> Option<(u16, u32)> {
+        let grid_ref = pin.0.snapshot(&self.term).ok()??;
+        self.term
+            .point_from_grid_ref(grid_ref, Space::Screen)
+            .ok()?
+            .map(|c| (c.x, c.y))
+    }
+
+    /// Plain text of the cells from `start` through `end` (screen
+    /// coordinates, inclusive, in reading order), soft wraps joined and
+    /// trailing blanks trimmed.
+    pub fn text_between(&self, start: (u16, u32), end: (u16, u32)) -> String {
+        self.screen_text_between(start, end)
+    }
+
+    /// Every occurrence of `needle` on the active screen and its
+    /// scrollback, newest first, with libghostty-vt's search (byte-exact
+    /// except that ASCII letters match either case; callers compare the
+    /// text when case matters).
+    pub fn find(&mut self, needle: &[u8]) -> Vec<Found> {
+        if needle.is_empty() {
+            return Vec::new();
+        }
+        let Ok(mut search) = Search::new(&self.term) else {
+            return Vec::new();
+        };
+        if search.set_needle(&mut self.term, needle).is_err() || search.run(&self.term).is_err() {
+            return Vec::new();
+        }
+        let mut storage = MatchBuffer::new();
+        let Ok(matches) = search.matches(&self.term, &mut storage) else {
+            return Vec::new();
+        };
+        let point = |r| {
+            self.term
+                .point_from_grid_ref(r, Space::Screen)
+                .ok()
+                .flatten()
+                .map(|c| (c.x, c.y))
+        };
+        matches
+            .filter_map(|m| {
+                Some(Found {
+                    start: point(m.start())?,
+                    end: point(m.end())?,
+                })
+            })
+            .collect()
     }
 }

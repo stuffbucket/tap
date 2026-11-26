@@ -35,7 +35,7 @@ SOFTWARE.
 libghostty-rs (libghostty-vt Rust bindings)
 Source: https://github.com/Uzaaft/libghostty-rs
 License: MIT
-Notice: Used by the tap-index tool (crates/tap-index), which is built from source and not yet part of Tap.app.
+Notice: Used by the tap-index and tap-eval tools (crates/tap-index, crates/tap-eval), which are built from source and not yet part of Tap.app.
 
 --- libghostty-rs-LICENSE.txt ---
 MIT License

@@ -91,6 +91,11 @@ pub struct CheckpointKey {
     pub engine: String,
     /// The pane.
     pub pane: PaneId,
+    /// Hash of the byte program up to `byte`
+    /// ([`crate::program::PaneProgram::prefix_hash`]): the same for the
+    /// raw stream at every offset, and for any program before its first
+    /// splice.
+    pub program: u64,
     /// Stream byte offset.
     pub byte: u64,
 }
@@ -191,7 +196,10 @@ impl Checkpoints {
         if key.engine != self.engine {
             return None;
         }
-        self.by_pane.get(&key.pane)?.get(&key.byte)
+        self.by_pane
+            .get(&key.pane)?
+            .get(&key.byte)
+            .filter(|c| c.key == *key)
     }
 
     /// The last checkpoint of a pane at or before `position`.
@@ -277,9 +285,10 @@ impl Checkpoints {
     }
 }
 
-/// A terminal being driven through a pane's events.
-pub(crate) struct Replay<'s> {
+/// A terminal being driven through a pane's events (raw or edited).
+pub struct Replay<'s> {
     stream: &'s PaneStream,
+    /// The terminal.
     pub term: vt::Terminal,
     position: Position,
     /// Resize events applied.
@@ -308,8 +317,14 @@ impl<'s> Replay<'s> {
         })
     }
 
+    /// Where the replay is.
     pub fn position(&self) -> Position {
         self.position
+    }
+
+    /// The stream being replayed.
+    pub fn stream(&self) -> &'s PaneStream {
+        self.stream
     }
 
     /// Stream offset of everything applied so far.
@@ -332,7 +347,8 @@ impl<'s> Replay<'s> {
         }
     }
 
-    fn done(&self) -> bool {
+    /// Whether every event has been applied.
+    pub fn done(&self) -> bool {
         self.position.item >= self.stream.items.len()
     }
 
@@ -426,6 +442,18 @@ impl<'s> Replay<'s> {
         self.settle()
     }
 
+    /// Applies every event before `position.item`, then exactly
+    /// `position.intra` bytes of that event, without finishing a sequence
+    /// the last byte leaves open.
+    pub fn run_to_position(&mut self, position: Position) -> Result<(), VtError> {
+        self.run_to_item(position.item, &mut |_| {})?;
+        while self.position < position && !self.done() {
+            let target = self.stream.items[self.position.item].offset + position.intra;
+            self.step(Some(target))?;
+        }
+        Ok(())
+    }
+
     /// Applies every event before `item`.
     pub fn run_to_item(
         &mut self,
@@ -517,6 +545,7 @@ impl<'c> Checkpointer<'c> {
         let key = CheckpointKey {
             engine: self.store.engine.clone(),
             pane: self.pane.clone(),
+            program: replay.stream.program.prefix_hash(byte),
             byte,
         };
         self.store

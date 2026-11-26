@@ -93,8 +93,14 @@ informational: derived caches are keyed by the engine that builds them.
 
 Each op is tagged by `"op"` with camelCase fields; every anchor is a source
 coordinate, `{"us": n}` or `{"byte": {"pane": id, "offset": n}}` (an offset into
-the pane's concatenated raw `output` bytes). `"enabled": false` keeps an entry
-without effect. The full op list is `tap_model::edl::EditOp`.
+the pane's *playback stream*: each `output` event's `playbackData` when it has
+one, its `data` otherwise, concatenated; the stream that is replayed and
+indexed). Every byte coordinate in the list (segments, byte ranges, mask
+anchors) counts that stream. `"enabled": false` keeps an entry
+without effect. `"preBake": true` marks an entry copied from a recording
+that was later baked into this one whose byte coordinates could not be
+moved onto the new bytes: it is kept, but evaluating it enabled is refused
+(`edl::PRE_BAKE`). The full op list is `tap_model::edl::EditOp`.
 
 ## `.tlog` byte layout (version 1)
 
@@ -184,14 +190,15 @@ and the inverse — are in the `timemap` module docs.
 
 ## Deferred
 
-- Evaluation of `retimeTyping` (needs typing segments from the index), speed
-  ramps, and the byte-changing and render-time ops (`excise`, `replaceText`,
-  `redactInput`, `mask`). They parse and round-trip; `TimeMap::build` returns
-  `EvalError::Unsupported` listing each one.
-- The byte program, segmentation, the index, checkpoints and thumbnails
-  (`tap-eval`, `tap-index`).
+- Evaluation of `retimeTyping` (needs typing segments from the index) and
+  speed ramps. They parse and round-trip; `TimeMap::build` and `tap-eval`
+  return `EvalError::Unsupported` listing each one.
+- The byte-changing and render-time ops (`excise`, `replaceText`,
+  `redactInput`, `mask`) are evaluated by [`tap-eval`](../tap-eval/README.md),
+  which also builds the time map for a whole edit list; `TimeMap::build`
+  alone lists them as unsupported. Segmentation, the index and checkpoints
+  are in [`tap-index`](../tap-index/README.md); thumbnails are not done.
 - Camera and keystroke-HUD lanes in `edits.json`, an undo stack, and Kitty
   media under `assets/`.
 - Resynchronising past a damaged record in the middle of a `.tlog`
   (recovery stops at the first damage).
-- CI for the Rust workspace.

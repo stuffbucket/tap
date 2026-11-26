@@ -112,10 +112,11 @@ fn every_op() -> Vec<EditOp> {
 #[test]
 fn every_op_round_trips() {
     for op in every_op() {
-        for enabled in [true, false] {
+        for (enabled, pre_bake) in [(true, false), (false, false), (false, true), (true, true)] {
             let entry = EditEntry {
                 enabled,
                 op: op.clone(),
+                pre_bake,
             };
             let text = serde_json::to_string(&entry).unwrap();
             let back: EditEntry = serde_json::from_str(&text).unwrap();
@@ -123,6 +124,7 @@ fn every_op_round_trips() {
             let value: Value = serde_json::from_str(&text).unwrap();
             assert_eq!(value["op"], op.name());
             assert_eq!(value.get("enabled").is_some(), !enabled, "{text}");
+            assert_eq!(value.get("preBake").is_some(), pre_bake, "{text}");
         }
     }
 }
