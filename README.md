@@ -63,6 +63,10 @@ Each frame replays the pane's recorded output into a Ghostty surface sized to th
 
 Building Ghostty.app itself from source is not part of Tap's build: it would need full Xcode for Apple's `metal` shader compiler, and Ghostty's own signed, notarized build of the pinned commit is the same code.
 
+## Open Tap.app
+
+Opening Tap.app opens a Terminal window that is already recording your login shell (`tap launch`): a banner names the file under `~/Movies/Tap/`, and everything you type and see is saved. Type `exit` and the recording opens in the browser player to scrub, edit and export. The first launch runs `tap doctor` and stops before recording if anything bundled is broken.
+
 ## Watch someone use their terminal
 
 ```sh
@@ -75,6 +79,8 @@ Tap enters raw-input mode and records:
 2. terminal-generated input such as cursor-position replies;
 3. output bytes read from the PTY;
 4. terminal resizes.
+
+If Tap itself is interrupted (Ctrl+C, the window closing, or `kill`), it hangs up the recorded program and still saves the recording. When capture ends, Tap returns your terminal to a normal shell state even if the recorded program crashed or was killed: it leaves the alternate screen if the program left it on and turns off mouse reporting, focus events, bracketed paste, application cursor keys, modifyOtherKeys and the Kitty keyboard protocol.
 
 Output is replayed through Ghostty at its original time. Shell echo makes ordinary typing appear naturally. The separate input lane powers the optional keystroke overlay and preserves activity that is not echoed.
 
@@ -90,6 +96,14 @@ bun src/cli.ts capture --input-policy redact -o demo.tap -- zsh
 # Store no keyboard-input events
 bun src/cli.ts capture --input-policy omit -o demo.tap -- zsh
 ```
+
+When the recorded program is zsh, Tap has it mark each prompt, each command and its exit status with OSC 133 escape sequences, so a recording can later be split into commands. Nothing on screen changes:
+
+- Your own `.zshenv`, `.zprofile`, `.zshrc` and `.zlogin` run as usual, and your prompt is not modified.
+- Tap steps aside if your configuration already loads another terminal's shell integration.
+- The command line is written into the recording only with `--input-policy record`, so redacted input never reappears in the output.
+
+fish 4 and newer writes these marks itself. `--no-shell-integration` turns this off for `capture` and `launch`, and the recording's `metadata.shellIntegration` lists the shells that were set up.
 
 ## Capture splits
 
@@ -151,9 +165,12 @@ Tape projects persist and render `Padding`, `Margin`, `MarginFill`, `BorderRadiu
 bun src/cli.ts screenshot demo.tap -o demo.png --at 1.25
 bun src/cli.ts render demo.tap -o demo.mp4 --fps 120
 bun src/cli.ts render demo.tap -o demo.webm --fps 60
+bun src/cli.ts render demo.tap -o demo.mp4 --scale 2   # 2560×1440, sharp on Retina screens
 ```
 
 Export uses a deterministic fixed-step project clock. It does not screen-capture and does not derive timing from pipe arrival. Every frame is composited to RGBA and sent to FFmpeg.
+
+Text is drawn at its final pixel size, never stretched: each pane's font is sized so the largest grid it shows during the recording fits its area, and the pane is drawn 1:1 from its top-left corner, inset from the frame edge. `--scale` multiplies the output size (and with it the font and presentation padding, margins and corners). The browser player does the same: native frames are requested at the screen's pixel density and shown 1:1, and the WASM view sizes its font to fit rather than stretching its canvas, using the same bundled JetBrains Mono.
 
 A tested 120 fps Kitty animation produced changing red/blue frames in a 120/1 H.264 stream. Split-pane capture with ordinary PTY output and a Kitty animation was also rendered and inspected. Interactive playback in headed Chrome on a 120 Hz ProMotion display measured 119.7 WASM animation ticks/s and 117.7 native Kitty frames/s over two seconds, i.e. tracking the display refresh rate. With Chrome's frame limiter/vsync disabled, Kitty-enabled WASM sustained over 4,000 animation ticks/s, leaving headroom for 144/240 Hz displays. Live rates are visible in the player toolbar.
 

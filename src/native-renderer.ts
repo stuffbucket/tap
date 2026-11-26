@@ -55,6 +55,17 @@ export function nativeRendererAvailable(): boolean {
 /** JetBrains Mono and symbol fonts shipped with Termless; the renderer registers them at startup. */
 export const bundledFontDirectory = resolve(import.meta.dir, "../node_modules/@termless/core/assets/fonts")
 
+/**
+ * Cell size in pixels for a font size. VHS's LineHeight is a multiplier (1.0 = normal) and its
+ * LetterSpacing is extra pixels per cell.
+ */
+export function cellMetrics(fontSize: number, style: { lineHeight?: number; letterSpacing?: number } = {}): { width: number; height: number } {
+  return {
+    width: Math.max(4, Math.ceil(fontSize * 0.62 + (style.letterSpacing ?? 0))),
+    height: Math.max(8, Math.ceil(fontSize * 1.35 * (style.lineHeight ?? 1))),
+  }
+}
+
 export interface NativeRendererStyle {
   background?: string
   foreground?: string
@@ -84,8 +95,9 @@ export class NativePaneRenderer {
     if (!existsSync(executable)) {
       throw new Error(`native libghostty-vt renderer is not built; run: bun run build:native`)
     }
-    this.cellWidth = Math.max(4, Math.ceil(fontSize * 0.62 + (style.letterSpacing ?? 0)))
-    this.cellHeight = Math.max(8, Math.ceil(style.lineHeight ?? fontSize * 1.35))
+    const cell = cellMetrics(fontSize, style)
+    this.cellWidth = cell.width
+    this.cellHeight = cell.height
     this.process = Bun.spawn(
       [
         executable, String(cols), String(rows), String(this.cellWidth), String(this.cellHeight), String(fontSize),
@@ -165,12 +177,15 @@ export class NativePaneRenderer {
 
   async close(): Promise<void> {
     if (this.closed) return
-    try {
-      await this.request(OP_QUIT)
-    } finally {
-      this.closed = true
-      this.stdin.end()
-      await this.process.exited
+    // The renderer may already be gone, e.g. when Ctrl+C reached its process group too; then there
+    // is nothing to shut down, and asking it to quit would only fail.
+    if (this.process.exitCode === null && this.process.signalCode === null) {
+      try {
+        await this.request(OP_QUIT)
+      } catch {}
     }
+    this.closed = true
+    try { this.stdin.end() } catch {}
+    await this.process.exited
   }
 }

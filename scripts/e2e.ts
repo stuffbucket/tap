@@ -133,7 +133,27 @@ try {
   await renderScreenshot(nativeSplit, nativeSplitPng)
   if (!(await Bun.file(nativeSplitPng).exists())) throw new Error("Tap-native split did not render")
 
-  console.log("E2E passed: Kitty WASM pixels, clean tmux split, UTF-8 input, browser-driven Tap-native split/close, saved input/output timeline")
+  // `tap capture` inside a real terminal (tmux) that answers queries: a program that asks the
+  // terminal what it is and reads the answer must get exactly one answer. The outer terminal's
+  // duplicate used to arrive as typed input and swallow the next command.
+  const queryTape = join(directory, "query.tap")
+  const tmuxSocket = `tap-e2e-query-${process.pid}`
+  const tmux = (...args: string[]) => Bun.spawnSync(["tmux", "-L", tmuxSocket, "-f", "/dev/null", ...args], { stdout: "pipe", stderr: "pipe" })
+  try {
+    tmux("new-session", "-d", "-s", "q", "-x", "100", "-y", "30", `${process.execPath} ${join(import.meta.dir, "../src/cli.ts")} capture -o ${queryTape} -- /bin/zsh -f`)
+    await Bun.sleep(2500)
+    tmux("send-keys", "-t", "q", "stty -echo; printf '\\033[c'; read -rs -k 1 a; while [ \"$a\" != c ]; do read -rs -k 1 a; done; stty echo; sleep 1; echo got-one-reply", "Enter")
+    await Bun.sleep(3000)
+    tmux("send-keys", "-t", "q", "exit", "Enter")
+    for (let attempt = 0; attempt < 50 && !(await Bun.file(queryTape).exists()); attempt++) await Bun.sleep(100)
+    const screen = new TextDecoder().decode(tmux("capture-pane", "-p", "-t", "q").stdout)
+    if (screen.includes("command not found")) throw new Error(`the outer terminal's query reply leaked into the shell:\n${screen}`)
+    if (!(await Bun.file(queryTape).exists())) throw new Error(`capture did not finish:\n${screen}`)
+  } finally {
+    tmux("kill-server")
+  }
+
+  console.log("E2E passed: Kitty WASM pixels, clean tmux split, UTF-8 input, browser-driven Tap-native split/close, terminal queries answered once, saved input/output timeline")
 } finally {
   await browser.close()
   await rm(directory, { recursive: true, force: true })

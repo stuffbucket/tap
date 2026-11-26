@@ -7,6 +7,10 @@ const project = await fetch("/project.json").then((response) => {
   return response.json()
 })
 const capabilities = await fetch("/capabilities").then((response) => response.json())
+// The exporter draws with the bundled JetBrains Mono; load it so the WASM view uses the same face.
+for (const [weight, file] of [["400", "JetBrainsMono-Regular.ttf"], ["700", "JetBrainsMono-Bold.ttf"]]) {
+  try { document.fonts.add(await new FontFace("JetBrains Mono", `url(/fonts/${file})`, { weight }).load()) } catch {}
+}
 const kittyFactory = capabilities.kittyWasm ? await createKittyWasmFactory() : null
 
 const stage = document.querySelector("#stage")
@@ -38,9 +42,10 @@ const paneStates = project.panes.map((pane) => {
     cols: pane.cols,
     rows: pane.rows,
     fontSize: pane.fontSize,
-    fontFamily: project.presentation?.fontFamily,
+    fontFamily: project.presentation?.fontFamily ?? "JetBrains Mono",
     cursorBlink: project.presentation?.cursorBlink ?? false,
-    theme: project.presentation?.theme ?? { background: "#1a1b26", foreground: "#c0caf5" },
+    // Same defaults as the exporter (native-renderer.ts) so both views look alike.
+    theme: project.presentation?.theme ?? { background: "#000000", foreground: "#ffffff" },
   })
   terminal.open(host)
   const kitty = kittyFactory ? kittyFactory(pane.cols, pane.rows, host) : null
@@ -115,15 +120,29 @@ function displayInput(event) {
   inputTimer = setTimeout(() => (keystrokes.style.opacity = "0"), 850)
 }
 
+// Where terminal content sits in the canvas, matching the exporter: inside the presentation
+// margin, window bar and padding, or a small inset for plain recordings.
+const DEFAULT_INSET = 12
+function contentRect() {
+  const W = project.canvas.width, H = project.canvas.height, p = project.presentation
+  if (!p) return { x: DEFAULT_INSET, y: DEFAULT_INSET, width: W - DEFAULT_INSET * 2, height: H - DEFAULT_INSET * 2 }
+  const bar = p.windowBar === "none" ? 0 : p.windowBarSize
+  const frameWidth = Math.max(1, W - p.margin * 2), frameHeight = Math.max(1, H - p.margin * 2)
+  return { x: p.margin + p.padding, y: p.margin + p.padding + bar, width: Math.max(1, frameWidth - p.padding * 2), height: Math.max(1, frameHeight - p.padding * 2 - bar) }
+}
+
 function place(state) {
   const { x, y, width, height } = state.layout
+  const content = contentRect()
+  const left = content.x + x * content.width, top = content.y + y * content.height
   Object.assign(state.element.style, {
-    left: `${x * 100}%`,
-    top: `${y * 100}%`,
-    width: `${width * 100}%`,
-    height: `${height * 100}%`,
+    left: `${left * displayScale}px`,
+    top: `${top * displayScale}px`,
+    width: `${width * content.width * displayScale}px`,
+    height: `${height * content.height * displayScale}px`,
     display: state.visible ? "block" : "none",
   })
+  fitFont(state)
 }
 
 function apply(state, event) {
@@ -175,7 +194,8 @@ async function updateNativeFrame(atUs) {
   }
   frameRequest = true
   try {
-    const response = await fetch(`/frame.png?atUs=${Math.round(atUs)}`)
+    const scale = (displayScale * (window.devicePixelRatio || 1)).toFixed(2)
+    const response = await fetch(`/frame.png?atUs=${Math.round(atUs)}&scale=${scale}`)
     if (!response.ok) throw new Error(await response.text())
     const nextUrl = URL.createObjectURL(await response.blob())
     const previous = frameObjectUrl
@@ -237,9 +257,52 @@ function tick(now) {
   else requestAnimationFrame(tick)
 }
 
+// The stage is sized to the window rather than CSS-scaled, so nothing is resampled. Its scale is
+// quantised so that scale x devicePixelRatio is a quarter step: native frames are requested at
+// exactly that scale and map one image pixel to one screen pixel.
+let displayScale = 1
 function fit() {
-  const scale = Math.min((wrap.clientWidth - 32) / project.canvas.width, (wrap.clientHeight - 32) / project.canvas.height)
-  stage.style.transform = `scale(${Math.max(0.05, scale)})`
+  const dpr = window.devicePixelRatio || 1
+  const raw = Math.max(0.05, Math.min((wrap.clientWidth - 32) / project.canvas.width, (wrap.clientHeight - 32) / project.canvas.height))
+  displayScale = Math.max(0.25, Math.floor(raw * dpr * 4) / 4) / dpr
+  stage.style.transform = ""
+  stage.style.width = `${project.canvas.width * displayScale}px`
+  stage.style.height = `${project.canvas.height * displayScale}px`
+  for (const state of paneStates) place(state)
+  if (nativePixels) void updateNativeFrame(currentUs)
+}
+
+/** The largest grid a pane shows; sizes replaced at the same instant are ignored (as in export). */
+function maxGrid(pane) {
+  const resizes = pane.events.filter((event) => event.type === "resize").sort((a, b) => a.atUs - b.atUs)
+  let cols = pane.cols, rows = pane.rows
+  let current = { atUs: 0, cols: pane.cols, rows: pane.rows }
+  for (const event of resizes) {
+    if (event.atUs > current.atUs) { cols = Math.max(cols, current.cols); rows = Math.max(rows, current.rows) }
+    current = event
+  }
+  return { cols: Math.max(cols, current.cols), rows: Math.max(rows, current.rows) }
+}
+
+// WASM panes draw at the largest font size where the pane's largest grid fits its box, instead
+// of having their canvas stretched to the box. Cell metrics are whole pixels, so search them.
+function fitFont(state) {
+  const width = state.element.clientWidth, height = state.element.clientHeight
+  if (!width || !height || !state.terminal.renderer) return
+  const grid = maxGrid(state.pane)
+  const fits = (size) => {
+    state.terminal.options.fontSize = size
+    const metrics = state.terminal.renderer.getMetrics()
+    return grid.cols * metrics.width <= width && grid.rows * metrics.height <= height
+  }
+  let low = 4, high = 72
+  if (!fits(low)) return
+  for (let step = 0; step < 10; step++) {
+    const middle = (low + high) / 2
+    if (fits(middle)) low = middle
+    else high = middle
+  }
+  state.terminal.options.fontSize = Math.floor(low * 4) / 4
 }
 
 function message(text) {
@@ -364,3 +427,5 @@ document.querySelector("#save").addEventListener("click", async () => {
 reset()
 seekTo(0)
 fit()
+// Lets tests (and the console) inspect the panes.
+window.__tapPlayer = { paneStates, maxGrid }

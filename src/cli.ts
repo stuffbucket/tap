@@ -3,7 +3,7 @@
 import { Command } from "commander"
 import { lstat, mkdir, mkdtemp, readFile, rm, symlink, unlink, writeFile } from "node:fs/promises"
 import { existsSync, realpathSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
+import { basename, dirname, join, resolve } from "node:path"
 import { homedir, tmpdir } from "node:os"
 import { captureProject } from "./capture.ts"
 import { readProject, writeProject } from "./project.ts"
@@ -12,7 +12,7 @@ import { runTape } from "./tape.ts"
 import { serveProject } from "./server.ts"
 import { startLiveCapture } from "./live.ts"
 import { startNativeLiveCapture } from "./native-live.ts"
-import { renderGhosttyFrame } from "./ghostty-full.ts"
+import { renderGhosttyFrame, uniformFrameSizes } from "./ghostty-full.ts"
 import { TAP_VERSION } from "./version.ts"
 
 /** The CLI launcher inside Tap.app (absent when running from a source checkout). */
@@ -50,6 +50,7 @@ program
   .option("--font-size <number>", "font size", "16")
   .option("--no-interactive", "do not forward keyboard input")
   .option("--input-policy <policy>", "record, redact, or omit input bytes", "record")
+  .option("--no-shell-integration", "do not have zsh mark prompts and commands (OSC 133)")
   .argument("<command...>")
   .allowUnknownOption(true)
   .action(async (command: string[], options: Record<string, string | boolean>) => {
@@ -73,6 +74,7 @@ program
       interactive: options.interactive !== false,
       mirrorOutput: true,
       inputPolicy,
+      shellIntegration: options.shellIntegration !== false,
     })
     await writeProject(String(options.output), project)
     process.stderr.write(`\nSaved ${options.output} (${project.durationUs}µs, ${project.panes[0]!.events.length} events)\n`)
@@ -134,10 +136,12 @@ program
   .option("--fps <number>", "override frames per second")
   .option("--start <seconds>", "start time in seconds")
   .option("--end <seconds>", "end time in seconds")
-  .action(async (projectPath: string, options: { output: string; fps?: string; start?: string; end?: string }) => {
+  .option("--scale <factor>", "output size multiplier; 2 gives Retina-sharp video at twice the canvas size", "1")
+  .action(async (projectPath: string, options: { output: string; fps?: string; start?: string; end?: string; scale: string }) => {
     const project = await readProject(projectPath)
     let lastPercent = -1
     await renderVideo(project, options.output, {
+      scale: Number(options.scale),
       ...(options.fps ? { fps: Number(options.fps) } : {}),
       ...(options.start ? { startUs: Math.round(Number(options.start) * 1_000_000) } : {}),
       ...(options.end ? { endUs: Math.round(Number(options.end) * 1_000_000) } : {}),
@@ -190,7 +194,9 @@ program
       }
       process.stderr.write("\n")
       // Frames are sized to the pane's grid; pad odd dimensions for H.264.
-      const ffmpeg = Bun.spawn(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", String(fps), "-i", join(directory, "%06d.png"), "-vf", "pad=ceil(iw/2)*2:ceil(ih/2)*2", "-c:v", "libx264", "-pix_fmt", "yuv420p", resolve(options.output)], { stdin: "ignore", stdout: "ignore", stderr: "inherit" })
+      // Frames change size when the recording resizes; pad them to one size rather than letting FFmpeg rescale.
+      await uniformFrameSizes(Array.from({ length: frameCount }, (_, frame) => join(directory, `${String(frame + 1).padStart(6, "0")}.png`)))
+      const ffmpeg = Bun.spawn(["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-framerate", String(fps), "-i", join(directory, "%06d.png"), "-c:v", "libx264", "-pix_fmt", "yuv420p", resolve(options.output)], { stdin: "ignore", stdout: "ignore", stderr: "inherit" })
       if ((await ffmpeg.exited) !== 0) throw new Error("FFmpeg encoding failed")
       console.log(`Saved ${options.output} with ${frameCount} actual Ghostty-rendered frames`)
     } finally {
@@ -204,12 +210,14 @@ program
   .argument("<project>")
   .requiredOption("-o, --output <path>", "PNG output path")
   .option("--at <seconds>", "timestamp in seconds")
-  .action(async (projectPath: string, options: { output: string; at?: string }) => {
+  .option("--scale <factor>", "output size multiplier; 2 gives a Retina-sharp image", "1")
+  .action(async (projectPath: string, options: { output: string; at?: string; scale: string }) => {
     const project = await readProject(projectPath)
     await renderScreenshot(
       project,
       options.output,
       options.at === undefined ? project.durationUs : Math.round(Number(options.at) * 1_000_000),
+      { scale: Number(options.scale) },
     )
     console.log(`Saved ${options.output}`)
   })
@@ -339,6 +347,60 @@ program
   })
 
 program
+  .command("launch")
+  .description("What opening Tap.app does: record a shell in this terminal, then open the recording in the player")
+  .option("--dir <path>", "folder for recordings", join(homedir(), "Movies/Tap"))
+  .option("--no-open", "do not open the player in a browser afterwards")
+  .option("--no-shell-integration", "do not have zsh mark prompts and commands (OSC 133)")
+  .action(async (options: { dir: string; open: boolean; shellIntegration: boolean }) => {
+    // The first launch checks every bundled component before anything is recorded.
+    const support = join(homedir(), "Library/Application Support/Tap")
+    const checked = join(support, "doctor-passed")
+    if (!existsSync(checked)) {
+      const doctor = Bun.spawn([process.execPath, import.meta.path, "doctor"], { stdio: ["ignore", "inherit", "inherit"] })
+      if ((await doctor.exited) !== 0) {
+        console.error("\nTap can't record until the problems above are fixed.")
+        process.exitCode = 1
+        return
+      }
+      await mkdir(support, { recursive: true })
+      await writeFile(checked, `${new Date().toISOString()}\n`)
+      console.log()
+    }
+
+    const now = new Date()
+    const pad = (value: number) => String(value).padStart(2, "0")
+    const name = `Tap ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} at ${pad(now.getHours())}.${pad(now.getMinutes())}.${pad(now.getSeconds())}.tap`
+    const directory = resolve(options.dir)
+    await mkdir(directory, { recursive: true })
+    const output = join(directory, name)
+    const shell = process.env.SHELL || "/bin/zsh"
+
+    process.stdout.write(
+      `\x1b[1;31m●\x1b[0m \x1b[1mTap is recording this terminal\x1b[0m to ${output}\n` +
+      `  Everything you type and see is saved, including passwords. Type \x1b[1mexit\x1b[0m to stop and open the player.\n` +
+      `  For sensitive work, record with: tap capture --input-policy redact -o file.tap -- ${basename(shell)}\n\n`,
+    )
+    const project = await captureProject({
+      title: `${basename(shell)} — ${name.replace(/\.tap$/, "")}`,
+      panes: [{ id: "main", command: [shell, "-l"], cols: process.stdout.columns || 80, rows: process.stdout.rows || 24, fontSize: 16 }],
+    }, { interactive: true, mirrorOutput: true, inputPolicy: "record", shellIntegration: options.shellIntegration })
+    await writeProject(output, project)
+    console.log(`\n\x1b[1m■\x1b[0m Saved ${output} (${(project.durationUs / 1_000_000).toFixed(1)}s)`)
+
+    const server = await serveProject(output, { hostname: "127.0.0.1", port: 0 })
+    const url = `http://${server.hostname}:${server.port}`
+    console.log(`  Player: ${url}  — scrub, edit, and export there. Press Ctrl+C to close it.`)
+    console.log(`  Later: tap serve ${shellQuote(output)}   ·   tap render ${shellQuote(output)} -o video.mp4`)
+    if (options.open) Bun.spawn(["/usr/bin/open", url], { stdio: ["ignore", "ignore", "ignore"] })
+    await new Promise<void>((resolvePromise) => {
+      const stop = () => { void server.stop().finally(resolvePromise) }
+      process.once("SIGINT", stop)
+      process.once("SIGTERM", stop)
+    })
+  })
+
+program
   .command("licenses")
   .description("Print bundled third-party software notices and license information")
   .option("--path", "print the notices file path instead of its contents")
@@ -438,7 +500,16 @@ program
     console.log(`Saved ${path}`)
   })
 
+// Errors surface as one line; set TAP_DEBUG=1 for stack traces.
+const report = (error: unknown) => {
+  if (process.env.TAP_DEBUG) console.error(error)
+  else console.error(`tap: ${error instanceof Error ? error.message : String(error)}`)
+}
+// Failures outside a command's own promise (signal handlers, stream errors) get the same treatment.
+process.on("unhandledRejection", (error) => { report(error); process.exit(1) })
+process.on("uncaughtException", (error) => { report(error); process.exit(1) })
+
 program.parseAsync().catch((error: unknown) => {
-  console.error(error instanceof Error ? error.message : String(error))
+  report(error)
   process.exitCode = 1
 })

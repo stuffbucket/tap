@@ -12,8 +12,10 @@ Tap's macOS builder, with a matching `.sha256`.
 ## First run
 
 1. Open the DMG and drag `Tap.app` to Applications.
-2. Double-click Tap. Terminal opens with `tap doctor` (checks every bundled component) and the
-   quickstart. macOS asks once whether Tap may control Terminal.
+2. Open Tap. A Terminal window opens that is already recording: everything you type and see is
+   saved to `~/Movies/Tap/`. Type `exit` and the recording opens in the browser player, where you
+   can scrub, edit and export it. The first launch also runs `tap doctor`, and macOS asks once
+   whether Tap may control Terminal.
 3. Put `tap` on your PATH:
 
    ```sh

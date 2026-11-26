@@ -3,12 +3,20 @@ import { encodeBytes } from "./bytes.ts"
 import { NativePaneRenderer, nativeRendererAvailable } from "./native-renderer.ts"
 import { KittyNormalizer } from "./kitty-normalizer.ts"
 import { TAP_VERSION } from "./version.ts"
+import { AltScreenTracker } from "./terminal-modes.ts"
+import { QueryFilter } from "./mirror-filter.ts"
+import { withShellIntegration, type IntegratedShell } from "./shell-integration.ts"
 
 export interface CaptureOptions {
   interactive?: boolean
   mirrorOutput?: boolean
   /** Input is recorded by default. Redact keeps timing/provenance; omit stores nothing. */
   inputPolicy?: "record" | "redact" | "omit"
+  /**
+   * Have supported shells mark prompts and commands with OSC 133, so a recording can be split
+   * into commands. On by default; the marks don't change what is on screen.
+   */
+  shellIntegration?: boolean
 }
 
 interface PtyHandle {
@@ -63,6 +71,10 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
   const layouts = defaultLayouts(spec.panes.length)
   const start = process.hrtime.bigint()
   const live: LivePane[] = []
+  // Modes the mirrored program turns on in the user's terminal are restored when capture ends.
+  const mirroredScreen = new AltScreenTracker()
+  const mirrorFilter = new QueryFilter()
+  const integratedShells = new Set<IntegratedShell>()
 
   try {
     for (const [index, paneSpec] of spec.panes.entries()) {
@@ -91,16 +103,24 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
           ...(paneSpec.kittyFileRoots ? { allowedRoots: paneSpec.kittyFileRoots } : {}),
         }),
       }
+      let env: Record<string, string | undefined> = {
+        ...process.env,
+        TERM: "xterm-ghostty",
+        COLORTERM: "truecolor",
+        TERM_PROGRAM: "ghostty",
+        TERM_PROGRAM_VERSION: `tap/${TAP_VERSION}`,
+        ...paneSpec.env,
+      }
+      if (options.shellIntegration !== false) {
+        const integrated = withShellIntegration(paneSpec.command, env, {
+          commandLines: (options.inputPolicy ?? "record") === "record",
+        })
+        env = integrated.env
+        if (integrated.shell) integratedShells.add(integrated.shell)
+      }
       const child = Bun.spawn(paneSpec.command, {
         ...(paneSpec.cwd ? { cwd: paneSpec.cwd } : {}),
-        env: {
-          ...process.env,
-          TERM: "xterm-ghostty",
-          COLORTERM: "truecolor",
-          TERM_PROGRAM: "ghostty",
-          TERM_PROGRAM_VERSION: `tap/${TAP_VERSION}`,
-          ...paneSpec.env,
-        },
+        env: Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
         terminal: {
           cols,
           rows,
@@ -112,7 +132,12 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
               ...encodeBytes(bytes),
             }
             events.push(event)
-            if (options.mirrorOutput && index === 0) process.stdout.write(bytes)
+            if (options.mirrorOutput && index === 0) {
+              // The user's terminal sees the output without its queries, so only the recording
+              // terminal answers them (see mirror-filter.ts).
+              process.stdout.write(mirrorFilter.push(bytes))
+              mirroredScreen.push(bytes)
+            }
             parser.queue = parser.queue
               .then(async () => {
                 const playback = await parser.normalizer.push(bytes)
@@ -188,6 +213,16 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
       onResize()
     }
 
+    // If Tap itself is signalled (Ctrl+C, the window closing, kill), hang up the recorded programs as a
+    // closing terminal would, so the normal path below still saves the recording and restores the
+    // terminal. A program that ignores the hangup is killed after two seconds.
+    const stopSignals = ["SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"] as const
+    const onStopSignal = () => {
+      for (const { process: child } of live) try { child.kill("SIGHUP") } catch {}
+      setTimeout(() => { for (const { process: child } of live) try { child.kill("SIGKILL") } catch {} }, 2_000).unref()
+    }
+    for (const signal of stopSignals) process.on(signal, onStopSignal)
+
     try {
       await Promise.all(live.map(({ process: child }) => child.exited))
       await Promise.all(live.map(({ parser }) => parser.queue))
@@ -208,6 +243,9 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
         if (pane.parser.error) throw pane.parser.error
       }
     } finally {
+      for (const signal of stopSignals) process.off(signal, onStopSignal)
+      // The terminal may already be gone (window closed); restoring it is best-effort.
+      if (options.mirrorOutput && process.stdout.isTTY) try { process.stdout.write(mirroredScreen.restoreSequence()) } catch {}
       if (canInteract) {
         stdin.off("data", onInput)
         process.stdout.off("resize", onResize)
@@ -240,6 +278,7 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
       terminalEngine: "libghostty-vt 1.0.1",
       timebase: "microseconds",
       source: options.interactive ? "interactive-pty" : "pty",
+      ...(integratedShells.size ? { shellIntegration: [...integratedShells].sort() } : {}),
     },
   }
 }
