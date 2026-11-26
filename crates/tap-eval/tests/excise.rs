@@ -4,7 +4,7 @@
 mod support;
 
 use tap_eval::{Outcome, Refusal, Side, Unreadable, state::TermState};
-use tap_index::{IndexOptions, SegmentKind, SessionIndex};
+use tap_index::{SegmentKind, SessionIndex};
 use tap_model::Session;
 
 use support::*;
@@ -405,5 +405,4 @@ fn identical_programs_index_identically() {
     for key in keys(&a).iter().filter(|k| k.byte > 984) {
         assert!(!raw_keys.contains(key), "{key:?} after the splice");
     }
-    let _ = IndexOptions::default();
 }

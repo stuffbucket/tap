@@ -5,7 +5,7 @@ use std::path::Path;
 
 use tap_eval::state::TermState;
 use tap_eval::{Evaluation, evaluate_entries};
-use tap_index::stream::{ItemKind, PaneStream};
+use tap_index::stream::PaneStream;
 use tap_index::vt::{self, Scrollback};
 use tap_index::{IndexOptions, Position, Replay, SessionIndex};
 use tap_model::edl::{EditEntry, EditOp, SegId};
@@ -177,20 +177,6 @@ pub fn at_end(stream: &PaneStream) -> vt::Terminal {
 
 pub fn edited_index(session: &Session, evaluation: &Evaluation) -> SessionIndex {
     evaluation.index(session, IndexOptions::default()).unwrap()
-}
-
-/// Output items of a stream with their bytes.
-pub fn outputs(stream: &PaneStream) -> Vec<&[u8]> {
-    stream
-        .items
-        .iter()
-        .filter_map(|i| match i.kind {
-            ItemKind::Output { len } => {
-                Some(&stream.bytes[i.offset as usize..(i.offset + len) as usize])
-            }
-            _ => None,
-        })
-        .collect()
 }
 
 /// Deterministic pseudo-random numbers (xorshift64*).
