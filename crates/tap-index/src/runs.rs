@@ -9,15 +9,21 @@
 //! bytes that drew it ([`Runs::cell_source`]), and so text in output can be
 //! found by its bytes ([`Runs::chains`]).
 //!
-//! **Layout epochs.** With all scrollback kept, a cell keeps its screen
-//! coordinates as the screen scrolls; they change only when cells move:
-//! a resize reflows, ED 3 or a reset erases history, insert and delete
-//! line or character, scroll up and down, reverse index, a scrolling
-//! region that new lines scroll inside, or a switch between the primary
-//! and alternate screens. Each of those starts a new epoch, and a cell is
-//! traced back only to runs of the epoch it is looked up in. Text whose
-//! cells have moved since it was drawn is not traced (an editor falls back
-//! to masking it).
+//! **Rows.** Runs record rows as *virtual* rows: the screen row plus every
+//! row of history erased above it so far (ED 3 drops all history, and the
+//! rows on screen move up by that much), so a run's rows stay valid across
+//! ED 3. [`Runs::shift_at`] gives the number to add to a screen row to
+//! compare it with them.
+//!
+//! **Layout epochs.** With all scrollback kept, a cell keeps its virtual
+//! row as the screen scrolls; it changes only when cells move: a resize
+//! reflows, a reset erases everything, insert and delete line or
+//! character, scroll up and down, reverse index, a scrolling region that
+//! new lines scroll inside. Each of those starts a new epoch, and a cell is
+//! traced back only to runs of the epoch it is looked up in, on the same
+//! screen (switching screens moves no cell of either). Text whose cells have
+//! moved since it was drawn is not traced (an editor falls back to masking
+//! it).
 //!
 //! **Chains.** Runs separated only by SGR sequences draw contiguous text
 //! with a style change inside it (`key=sk-live-\e[31m4f9a2b`), so each run
@@ -46,10 +52,9 @@ pub struct Run {
     pub event: usize,
     /// Source time of that event.
     pub at_us: u64,
-    /// The cell its first character was drawn in: column, and row in screen
-    /// coordinates.
+    /// The cell its first character was drawn in: column, and virtual row.
     pub start: (u16, u32),
-    /// The cursor after it, in screen coordinates.
+    /// The cursor after it, as column and virtual row.
     pub end: (u16, u32),
     /// Whether a wrap was pending after it (its last character is in the
     /// last column).
@@ -85,6 +90,8 @@ pub struct Runs {
     pub runs: Vec<Run>,
     /// Where each layout epoch after the first starts.
     pub epochs: Vec<Position>,
+    /// Where history was erased (ED 3), and the rows erased so far.
+    pub shifts: Vec<(Position, u32)>,
 }
 
 /// A cell, in screen coordinates: column and row (scrollback included).
@@ -110,6 +117,8 @@ pub fn fold(stream: &PaneStream) -> Result<Runs, VtError> {
         term: vt::Terminal::new(cols, rows, vt::Scrollback::Unlimited)?,
         runs: Runs::default(),
         epoch: 0,
+        shift: 0,
+        seq_history: 0,
         sgr_only: false,
         last_end: None,
         seq: Vec::new(),
@@ -144,6 +153,10 @@ struct Folder {
     term: vt::Terminal,
     runs: Runs,
     epoch: u32,
+    /// Rows of history erased so far.
+    shift: u32,
+    /// Rows of history when the sequence being parsed started.
+    seq_history: u32,
     /// Only SGR sequences since the last run ended.
     sgr_only: bool,
     /// Where the last run ended, if nothing has been written since.
@@ -192,6 +205,7 @@ impl Folder {
                 if b == ESC {
                     self.seq.clear();
                     self.seq.push(ESC);
+                    self.seq_history = self.term.history_rows();
                 } else {
                     self.sgr_only = false;
                     if self.region && matches!(b, b'\n' | 0x0b | 0x0c) {
@@ -232,20 +246,31 @@ impl Folder {
         }
         match class {
             Class::Moves => self.new_epoch(at),
+            Class::EraseHistory => {
+                let erased = self.seq_history.saturating_sub(self.term.history_rows());
+                if erased > 0 {
+                    self.shift += erased;
+                    self.runs.shifts.push((at, self.shift));
+                }
+            }
             Class::Region(set) => self.region = set,
             Class::LineFeed if self.region => self.new_epoch(at),
             _ => {}
         }
         if self.term.on_alternate_screen() != was_alternate {
-            self.new_epoch(at);
+            // Text drawn before the switch does not continue across it.
+            self.sgr_only = false;
+            self.last_end = None;
         }
     }
 
     fn print(&mut self, bytes: &[u8], at: u64) {
         let (x, y) = self.term.cursor_on_screen();
+        let y = y + self.shift;
         let pending = self.term.cursor_pending_wrap();
         self.term.write(bytes);
-        let end = self.term.cursor_on_screen();
+        let (ex, ey) = self.term.cursor_on_screen();
+        let end = (ex, ey + self.shift);
         let end_pending_wrap = self.term.cursor_pending_wrap();
         let cols = self.term.size().0;
         if let Some(run) = self.runs.runs.last_mut()
@@ -283,6 +308,8 @@ enum Class {
     /// Moves cells: insert or delete lines or characters, scroll, reverse
     /// index, erase scrollback, reset.
     Moves,
+    /// ED 3: erases history; rows on the screen move up by as much.
+    EraseHistory,
     /// DECSTBM: `true` when it sets a region (which may not be the whole
     /// screen), `false` when it resets to the whole screen.
     Region(bool),
@@ -305,7 +332,7 @@ fn classify(seq: &[u8]) -> Class {
             match last {
                 b'm' if plain => Class::Sgr,
                 b'L' | b'M' | b'S' | b'T' | b'@' | b'P' if plain => Class::Moves,
-                b'J' if body == b"3" => Class::Moves,
+                b'J' if body == b"3" => Class::EraseHistory,
                 b'r' if plain => Class::Region(!body.is_empty()),
                 _ => Class::Other,
             }
@@ -325,6 +352,13 @@ fn advance(pos: (u16, u32), w: u16, cols: u16) -> ((u16, u32), (u16, u32)) {
 }
 
 impl Runs {
+    /// What to add to a screen row at `position` to compare it with runs'
+    /// virtual rows: the rows of history erased before it.
+    pub fn shift_at(&self, position: Position) -> u32 {
+        let k = self.shifts.partition_point(|&(p, _)| p <= position);
+        k.checked_sub(1).map_or(0, |k| self.shifts[k].1)
+    }
+
     /// The layout epoch in effect at `position`.
     pub fn epoch_at(&self, position: Position) -> u32 {
         self.epochs.partition_point(|&p| p <= position) as u32
@@ -356,7 +390,7 @@ impl Runs {
         Some(out)
     }
 
-    /// The run that last drew `cell` (screen coordinates) before stream
+    /// The run that last drew `cell` (column and virtual row) before stream
     /// byte `before`, in epoch `epoch` on the given screen, and the bytes
     /// of the character in it. `None` when no run of that epoch drew it.
     pub fn cell_source(
@@ -491,6 +525,6 @@ mod tests {
         let s = stream(&[b"ab\x1b[Lcd\x1b[?1049hx"]);
         let runs = fold(&s).unwrap();
         let epochs: Vec<_> = runs.runs.iter().map(|r| (r.epoch, r.alternate)).collect();
-        assert_eq!(epochs, vec![(0, false), (1, false), (2, true)]);
+        assert_eq!(epochs, vec![(0, false), (1, false), (1, true)]);
     }
 }
