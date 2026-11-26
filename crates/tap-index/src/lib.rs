@@ -1,7 +1,7 @@
 //! Tap's recording index: OSC 133 marks, command segments, the transcript
 //! and checkpointed seek.
 //!
-//! Building the index replays each pane twice through libghostty-vt:
+//! Building the index replays each pane three times through libghostty-vt:
 //!
 //! 1. **Marks** ([`scan`]): the stream is fed one escape sequence at a time
 //!    so every OSC 133 mark, alternate-screen switch, clear and reset gets
@@ -9,9 +9,12 @@
 //! 2. **Segments** ([`segment`]): command blocks from the OSC 133 marks, or
 //!    from Enter keystrokes when the pane has none, with TUI spans, output
 //!    paragraphs and idle gaps inside them.
-//! 3. **Transcript and checkpoints**: a second replay stops at each segment's
-//!    boundaries to read the prompt and output text off the screen and to
-//!    snapshot the terminal ([`replay`]).
+//! 3. **Transcript**: a second replay, keeping all scrollback, stops at each
+//!    segment's boundaries to read the prompt and output text off the
+//!    screen.
+//! 4. **Checkpoints**: a third replay, keeping Ghostty's default scrollback,
+//!    snapshots the terminal at segment boundaries and periodically
+//!    ([`replay`]).
 //!
 //! [`SessionIndex::seek`] then restores the nearest checkpoint and replays
 //! only what follows it.
@@ -38,6 +41,7 @@ pub use replay::{Checkpoint, CheckpointKey, Checkpoints, Position};
 pub use scan::{Mark, MarkKind};
 pub use segment::{BoundarySource, Segment, SegmentKind};
 pub use transcript::{Block, CommandSource, CommandText, Durations, Transcript, TuiSpan};
+pub use vt::Scrollback;
 pub use vt::VtError;
 
 use replay::{Checkpointer, Replay};
@@ -121,6 +125,24 @@ impl PaneIndex {
     }
 }
 
+/// How an index is built.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct IndexOptions {
+    /// History kept by the terminals that checkpoints, seek and
+    /// [`SessionIndex::replay_from_start`] use. The transcript always keeps
+    /// all of it.
+    pub scrollback: Scrollback,
+}
+
+impl Default for IndexOptions {
+    /// Ghostty's default scrollback, [`vt::GHOSTTY_SCROLLBACK_BYTES`].
+    fn default() -> Self {
+        Self {
+            scrollback: Scrollback::Bytes(vt::GHOSTTY_SCROLLBACK_BYTES),
+        }
+    }
+}
+
 /// A session's index.
 #[derive(Debug, Clone, Serialize)]
 pub struct SessionIndex {
@@ -128,6 +150,8 @@ pub struct SessionIndex {
     pub engine: String,
     /// One per pane, in manifest order.
     pub panes: Vec<PaneIndex>,
+    #[serde(skip)]
+    scrollback: Scrollback,
     #[serde(skip)]
     checkpoints: Checkpoints,
 }
@@ -147,9 +171,15 @@ pub fn open(path: &Path) -> Result<Session, IndexError> {
 }
 
 impl SessionIndex {
-    /// Indexes every pane of a session.
+    /// Indexes every pane of a session with the default options.
     pub fn build(session: &Session) -> Result<Self, IndexError> {
-        let mut checkpoints = Checkpoints::default();
+        Self::build_with(session, IndexOptions::default())
+    }
+
+    /// Indexes every pane of a session.
+    pub fn build_with(session: &Session, options: IndexOptions) -> Result<Self, IndexError> {
+        let engine = vt::engine_fingerprint(options.scrollback);
+        let mut checkpoints = Checkpoints::new(engine.clone());
         let mut panes = Vec::new();
         for info in &session.manifest.panes {
             let stream = PaneStream::new(
@@ -158,13 +188,19 @@ impl SessionIndex {
                 session.pane_events(&info.id),
                 session.manifest.duration_us,
             );
-            panes.push(index_pane(stream, &mut checkpoints)?);
+            panes.push(index_pane(stream, options.scrollback, &mut checkpoints)?);
         }
         Ok(Self {
-            engine: vt::engine_fingerprint(),
+            engine,
             panes,
+            scrollback: options.scrollback,
             checkpoints,
         })
+    }
+
+    /// The history kept by the terminals [`SessionIndex::seek`] returns.
+    pub fn scrollback(&self) -> Scrollback {
+        self.scrollback
     }
 
     /// A pane's index.
@@ -205,7 +241,7 @@ impl SessionIndex {
         };
         let mut replay = match self.checkpoints.at_or_before(pane, target) {
             Some(checkpoint) => Replay::resume(&index.stream, checkpoint)?,
-            None => Replay::start(&index.stream)?,
+            None => Replay::start(&index.stream, self.scrollback)?,
         };
         replay.run_to_item(target.item, &mut |_| {})?;
         Ok(replay.term)
@@ -219,7 +255,7 @@ impl SessionIndex {
         source_us: u64,
     ) -> Result<vt::Terminal, IndexError> {
         let index = self.pane(pane)?;
-        let mut replay = Replay::start(&index.stream)?;
+        let mut replay = Replay::start(&index.stream, self.scrollback)?;
         replay.run_to_item(index.stream.items_through(source_us), &mut |_| {})?;
         Ok(replay.term)
     }
@@ -231,8 +267,6 @@ impl SessionIndex {
 enum Action {
     /// Read a segment's output (it ended here).
     OutputText(usize),
-    /// Snapshot the terminal (a segment boundary).
-    Checkpoint,
     /// Pin the row a segment's prompt is drawn on.
     PinPrompt(usize),
     /// Read a segment's prompt rows (its first key is about to be typed).
@@ -241,10 +275,15 @@ enum Action {
     PinOutput(usize),
 }
 
-fn index_pane(stream: PaneStream, checkpoints: &mut Checkpoints) -> Result<PaneIndex, IndexError> {
+fn index_pane(
+    stream: PaneStream,
+    scrollback: Scrollback,
+    checkpoints: &mut Checkpoints,
+) -> Result<PaneIndex, IndexError> {
     let marks = scan::scan(&stream)?;
     let segmentation = segment::segment(&stream, &marks);
-    let captured = replay_for_transcript(&stream, &segmentation, checkpoints)?;
+    let captured = replay_for_transcript(&stream, &segmentation)?;
+    take_checkpoints(&stream, &segmentation, scrollback, checkpoints)?;
     let blocks = segmentation
         .segments
         .iter()
@@ -285,11 +324,11 @@ fn index_pane(stream: PaneStream, checkpoints: &mut Checkpoints) -> Result<PaneI
 }
 
 /// Replays the pane once, reading prompt and output text at each segment's
-/// boundaries and taking checkpoints.
+/// boundaries. The terminal keeps all scrollback, so a long command's output
+/// is read whole.
 fn replay_for_transcript(
     stream: &PaneStream,
     segmentation: &Segmentation,
-    checkpoints: &mut Checkpoints,
 ) -> Result<Vec<Captured>, IndexError> {
     let mut stops: Vec<(u64, Action)> = Vec::new();
     for (index, (segment, plan)) in segmentation
@@ -298,11 +337,6 @@ fn replay_for_transcript(
         .zip(&segmentation.plans)
         .enumerate()
     {
-        stops.push((segment.start_byte, Action::Checkpoint));
-        for child in &segment.children {
-            stops.push((child.start_byte, Action::Checkpoint));
-            stops.push((child.end_byte, Action::Checkpoint));
-        }
         if let Some(byte) = plan.prompt_byte {
             stops.push((byte, Action::PinPrompt(index)));
             let typed_at = plan
@@ -326,13 +360,11 @@ fn replay_for_transcript(
     let mut output_pins = Vec::new();
     output_pins.resize_with(captured.len(), || None);
 
-    let mut checkpointer = Checkpointer::new(stream.pane.clone(), checkpoints);
-    let mut replay = Replay::start(stream)?;
+    let mut replay = Replay::start(stream, Scrollback::Unlimited)?;
     for (byte, action) in stops {
-        replay.run_to_byte(byte, &mut |r| checkpointer.periodic(r))?;
+        replay.run_to_byte(byte, &mut |_| {})?;
         let term = &replay.term;
         match action {
-            Action::Checkpoint => checkpointer.take(&replay),
             Action::PinPrompt(i) => prompt_pins[i] = term.pin_cursor(),
             Action::PromptText(i) => {
                 captured[i].prompt = Some(
@@ -355,9 +387,36 @@ fn replay_for_transcript(
             }
         }
     }
-    replay.run_to_item(stream.items.len(), &mut |r| checkpointer.periodic(r))?;
-    if let Some(error) = checkpointer.error.take() {
-        return Err(error.into());
-    }
     Ok(captured)
+}
+
+/// Replays the pane once more, with the scrollback seek uses, taking
+/// checkpoints at every segment boundary and periodically.
+fn take_checkpoints(
+    stream: &PaneStream,
+    segmentation: &Segmentation,
+    scrollback: Scrollback,
+    checkpoints: &mut Checkpoints,
+) -> Result<(), IndexError> {
+    let mut boundaries = Vec::new();
+    for segment in &segmentation.segments {
+        boundaries.push(segment.start_byte);
+        for child in &segment.children {
+            boundaries.extend([child.start_byte, child.end_byte]);
+        }
+    }
+    boundaries.sort_unstable();
+    boundaries.dedup();
+
+    let mut checkpointer = Checkpointer::new(stream.pane.clone(), checkpoints);
+    let mut replay = Replay::start(stream, scrollback)?;
+    for byte in boundaries {
+        replay.run_to_byte(byte, &mut |r| checkpointer.periodic(r))?;
+        checkpointer.take(&replay);
+    }
+    replay.run_to_item(stream.items.len(), &mut |r| checkpointer.periodic(r))?;
+    match checkpointer.error.take() {
+        Some(error) => Err(error.into()),
+        None => Ok(()),
+    }
 }

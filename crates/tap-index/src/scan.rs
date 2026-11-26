@@ -92,11 +92,13 @@ pub enum MarkKind {
     },
 }
 
-/// Finds every mark in a pane's stream.
+/// Finds every mark in a pane's stream. Nothing here reads history, so the
+/// terminal keeps Ghostty's default scrollback rather than all of it.
 pub fn scan(stream: &PaneStream) -> Result<Vec<Mark>, VtError> {
     let (cols, rows) = stream.initial_size;
+    let scrollback = vt::Scrollback::Bytes(vt::GHOSTTY_SCROLLBACK_BYTES);
     let mut scanner = Scanner {
-        term: vt::Terminal::new(cols, rows)?,
+        term: vt::Terminal::new(cols, rows, scrollback)?,
         marks: Vec::new(),
         alternate: false,
         seq_start: 0,

@@ -132,31 +132,80 @@ A second replay stops at each segment's boundaries:
 
 ### Checkpoints and seek
 
-The second replay also snapshots the terminal (libghostty-vt's snapshot
-encoder) at every segment boundary and whenever 256 KiB of output or 10 s of
-source time have passed since the last snapshot, always with the parser at
-ground. Checkpoints are keyed by `(engine fingerprint, pane, stream offset)`;
-the fingerprint names libghostty-vt's version, build metadata and
-optimisation mode. (The design keys them by a hash of the byte program up to
-the offset; until byte-changing edits are evaluated the byte program is the
-raw stream, so the offset alone identifies it.) Each records its exact position (event and bytes into it),
-so a resize at the same offset is replayed after it.
+**Scrollback.** Seek returns what a Ghostty window would have shown, so the
+terminals behind checkpoints, seek and `replay_from_start` keep Ghostty's
+default scrollback: 50,000,000 bytes of history pages, the default
+`scrollback-limit-bytes` in `src/config/Config.zig` at the commit
+libghostty-vt is built from (`vt::GHOSTTY_SCROLLBACK_BYTES`;
+`IndexOptions` can change it). libghostty-vt drops the oldest page of
+history whenever a new page would take it over that. The transcript's
+replay keeps all history, so a command's output is read whole however long
+it is; the mark scan reads no history and keeps Ghostty's default.
 
-The index's terminals keep all scrollback. libghostty-vt prunes history a
-page at a time, and a terminal restored from a snapshot lays its pages out
-differently, so with any limit a seek and a replay would drop different rows.
-The cost is memory: each checkpoint holds the whole history up to it.
+With all history kept, every checkpoint held the whole session so far:
+memory grew with the square of the session's length, and every seek
+decoded all of it.
+
+**Why a restore under a limit can differ.** A snapshot holds every page,
+but two things it does not reproduce decide which old rows a limit drops
+(`tests/scrollback.rs` reproduces both):
+
+1. libghostty-vt enforces the limit lazily. A column resize reflows history
+   into new pages (a wider screen needs more of them) and a page that
+   outgrows its pool item moves to a larger allocation, and neither drops
+   anything: the next page the screen grows does. The snapshot decoder
+   refuses every page of history that would take the restored screen over
+   the limit, so a terminal restored while over it comes back with less.
+   Every replay the index makes (indexing, seek, `replay_from_start`)
+   therefore applies the limit at the end of every event, as libghostty-vt
+   would at its next page, and a checkpoint taken inside an event while
+   over the limit is kept only if its restore brings back every page.
+2. How much room a page has for styles and hyperlinks is not in the
+   snapshot. The decoder rebuilds each page's allocation from size hints,
+   so a page with a large hyperlink table can come back larger and push the
+   oldest page out, and a new page's room depends on what the last few
+   pages used, so after a restore pages fill at different rows. With output
+   like that, the limit drops old pages at different moments after a seek
+   than in a replay.
+
+**What seek guarantees.** `seek(pane, t)` and `replay_from_start(pane, t)`
+have the same size, cursor, active screen and title, and:
+
+- when they keep the same number of rows, the same screen text and the
+  same VT dump of every row with every formatter extra (styles, modes,
+  palette, cursor style, scrolling region, tab stops, character sets);
+- otherwise the one that kept fewer rows is the newest part of the other:
+  its rows after its oldest line are the other's newest rows (screen text
+  and VT dump identical), and its text, soft wraps joined, ends the other's.
+  Only its oldest line is exempt, because pruning may have cut that line's
+  start and a later resize rewrapped what was left.
+
+The screen and everything but the oldest history are always exact. The
+golden tests (`tests/seek.rs`) check this at hundreds of random times, every
+event time and every checkpoint time, on the recorded sessions, two panes, a
+Kitty animation and a two-minute synthetic session (characters and sequences
+split across events, resizes, the alternate screen, clears, a reset, a
+600 KiB event). They require exact equality where nothing is pruned, and
+also for the synthetic session under a 2 MB limit, which prunes almost all
+of it while resizes reflow it; only its variant with a hyperlink on every
+line keeps different amounts of history. Re-encoded snapshot bytes match for
+the recorded sessions; they are not compared for the synthetic one, because
+libghostty-vt's snapshot encoding is not canonical once reflow has laid
+pages out differently.
+
+**When checkpoints are taken.** At every segment boundary, and whenever
+256 KiB of output or 10 s of source time have passed since the last one,
+always with the parser at ground. Checkpoints are keyed by `(engine
+fingerprint, pane, stream offset)`; the fingerprint names libghostty-vt's
+version, build metadata and optimisation mode, and the scrollback limit.
+(The design keys them by a hash of the byte program up to the offset; until
+byte-changing edits are evaluated the byte program is the raw stream, so the
+offset alone identifies it.) Each records its exact position (event and
+bytes into it), so a resize at the same offset is replayed after it.
 
 `seek(pane, source_us)` decodes the nearest checkpoint at or before the
-moment and replays the events after it. The golden tests check that this
-gives the same screen text (scrollback included), VT dump of the screen and
-scrollback with every formatter extra (styles, modes, palette, cursor style,
-scrolling region, tab stops, character sets), cursor, size, active screen and
-title as replaying from the start, at hundreds of random and boundary times.
-Re-encoded snapshot bytes match too for the recorded sessions; they are not
-compared for the synthetic one with many resizes, because libghostty-vt's
-snapshot encoding is not canonical once reflow has laid pages out
-differently.
+moment, at most the scrollback limit's worth of pages, and replays the
+events after it.
 
 Checkpoints are kept in memory. Writing them under
 `Session.tap/checkpoints/<fingerprint>/` is not done yet.
@@ -168,3 +217,6 @@ The fixtures in `tests/fixtures/` are real recordings of `zsh -i` made with
 with Tap's shell integration, without it (`--no-shell-integration`), and with
 input redacted. Re-record them with `bun scripts/record-fixture.ts` and update
 the expectations in `tests/transcript.rs`.
+
+`tests/seek.rs` holds the golden seek tests, and `tests/scrollback.rs` the
+two ways a restore differs under a limit.

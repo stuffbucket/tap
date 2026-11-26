@@ -5,10 +5,21 @@
 //! (when it is output). Positions order lexicographically, so "the state at
 //! source time t" is the position `(first event after t, 0)`.
 //!
-//! **Checkpoints** are libghostty-vt snapshots of the terminal, always taken
-//! with the parser at ground. The indexer takes one at every segment
-//! boundary and whenever 256 KiB of output or 10 s of source time have
-//! passed since the last one. Each is keyed by `(engine fingerprint, pane,
+//! **Scrollback.** The terminals checkpoints, seek and the reference
+//! replay use keep Ghostty's default scrollback
+//! ([`vt::GHOSTTY_SCROLLBACK_BYTES`]) unless told otherwise, and every
+//! replay holds them to that limit at the end of every event
+//! (`Replay::finish_event`), so at every event boundary they are in a state
+//! a snapshot can restore. What seek then guarantees is in the crate
+//! README, "Checkpoints and seek".
+//!
+//! **Checkpoints** are libghostty-vt snapshots, always taken with the parser
+//! at ground. The indexer takes one at every segment boundary and whenever
+//! 256 KiB of output or 10 s of source time have passed since the last one,
+//! unless the terminal is over its scrollback limit, which can only happen
+//! inside an event ([`vt::Terminal::within_scrollback_limit`]), and
+//! restoring the snapshot would bring back fewer pages; the next ground
+//! point is tried instead. Each is keyed by `(engine fingerprint, pane,
 //! stream byte offset)`; at most one is kept per offset, and it records its
 //! exact position, so a resize that happens at the same offset is replayed
 //! after it.
@@ -68,12 +79,21 @@ pub struct Checkpoint {
 }
 
 /// The checkpoints of one session, in memory.
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Checkpoints {
+    engine: String,
     by_pane: BTreeMap<PaneId, BTreeMap<u64, Checkpoint>>,
 }
 
 impl Checkpoints {
+    /// No checkpoints, for terminals with this engine fingerprint.
+    pub fn new(engine: String) -> Self {
+        Self {
+            engine,
+            by_pane: BTreeMap::new(),
+        }
+    }
+
     /// Every checkpoint of a pane, in stream order.
     pub fn pane(&self, pane: &PaneId) -> impl Iterator<Item = &Checkpoint> {
         self.by_pane.get(pane).into_iter().flat_map(|m| m.values())
@@ -81,7 +101,7 @@ impl Checkpoints {
 
     /// Looks a checkpoint up by its key.
     pub fn get(&self, key: &CheckpointKey) -> Option<&Checkpoint> {
-        if key.engine != vt::engine_fingerprint() {
+        if key.engine != self.engine {
             return None;
         }
         self.by_pane.get(&key.pane)?.get(&key.byte)
@@ -104,7 +124,7 @@ impl Checkpoints {
         self.len() == 0
     }
 
-    pub(crate) fn insert(&mut self, checkpoint: Checkpoint) {
+    fn insert(&mut self, checkpoint: Checkpoint) {
         self.by_pane
             .entry(checkpoint.key.pane.clone())
             .or_default()
@@ -122,11 +142,11 @@ pub(crate) struct Replay<'s> {
 
 impl<'s> Replay<'s> {
     /// A fresh terminal at the start of the pane.
-    pub fn start(stream: &'s PaneStream) -> Result<Self, VtError> {
+    pub fn start(stream: &'s PaneStream, scrollback: vt::Scrollback) -> Result<Self, VtError> {
         let (cols, rows) = stream.initial_size;
         Ok(Self {
             stream,
-            term: vt::Terminal::new(cols, rows)?,
+            term: vt::Terminal::new(cols, rows, scrollback)?,
             position: Position { item: 0, intra: 0 },
         })
     }
@@ -168,6 +188,25 @@ impl<'s> Replay<'s> {
         self.position.item >= self.stream.items.len()
     }
 
+    /// Moves past the current event once all of it has been applied, and
+    /// holds the terminal to its scrollback limit.
+    ///
+    /// libghostty-vt only drops history when the screen grows a page, so a
+    /// reflow or a page outgrowing its allocation can leave it over the
+    /// limit until then, and a terminal restored from a snapshot taken in
+    /// that state would come back with less history. Enforcing the limit
+    /// after every event, on every replay, keeps the terminals the index
+    /// compares in that respect identical, and ready to checkpoint at every
+    /// event boundary. Ghostty would drop the same oldest pages a little
+    /// later, at its next page.
+    fn finish_event(&mut self) {
+        self.position = Position {
+            item: self.position.item + 1,
+            intra: 0,
+        };
+        self.term.enforce_scrollback_limit();
+    }
+
     /// Applies the next piece of the current event: up to `limit` stream
     /// bytes of output, or the whole of any other event.
     fn step(&mut self, limit: Option<u64>) -> Result<(), VtError> {
@@ -185,17 +224,14 @@ impl<'s> Replay<'s> {
                 }
                 self.position.intra += n;
                 if self.position.intra >= len {
-                    self.position = Position {
-                        item: self.position.item + 1,
-                        intra: 0,
-                    };
+                    self.finish_event();
                 }
             }
             ItemKind::Resize { cols, rows } => {
                 self.term.resize(cols, rows)?;
-                self.position.item += 1;
+                self.finish_event();
             }
-            ItemKind::Input { .. } | ItemKind::Other => self.position.item += 1,
+            ItemKind::Input { .. } | ItemKind::Other => self.finish_event(),
         }
         Ok(())
     }
@@ -218,10 +254,7 @@ impl<'s> Replay<'s> {
             self.term.take_signals();
             self.position.intra += consumed;
             if self.position.intra >= len {
-                self.position = Position {
-                    item: self.position.item + 1,
-                    intra: 0,
-                };
+                self.finish_event();
             }
         }
         Ok(())
@@ -263,7 +296,6 @@ impl<'s> Replay<'s> {
 /// Decides when the indexer takes checkpoints and keeps them.
 pub(crate) struct Checkpointer<'c> {
     pane: PaneId,
-    engine: String,
     last: Option<(u64, u64)>,
     store: &'c mut Checkpoints,
     pub error: Option<VtError>,
@@ -273,7 +305,6 @@ impl<'c> Checkpointer<'c> {
     pub fn new(pane: PaneId, store: &'c mut Checkpoints) -> Self {
         Self {
             pane,
-            engine: vt::engine_fingerprint(),
             last: None,
             store,
             error: None,
@@ -290,29 +321,38 @@ impl<'c> Checkpointer<'c> {
         }
     }
 
-    /// Takes a checkpoint now. The replay must be at ground.
+    /// Takes a checkpoint now, if a restore would reproduce the terminal.
+    /// The replay must be at ground.
     pub fn take(&mut self, replay: &Replay<'_>) {
         let byte = replay.byte();
         if self.last.is_some_and(|(b, _)| b == byte) {
             return;
         }
-        match replay.term.snapshot() {
-            Ok(snapshot) => {
-                self.last = Some((byte, replay.at_us()));
-                self.store.insert(Checkpoint {
-                    key: CheckpointKey {
-                        engine: self.engine.clone(),
-                        pane: self.pane.clone(),
-                        byte,
-                    },
-                    position: replay.position(),
-                    at_us: replay.at_us(),
-                    snapshot,
-                });
-            }
+        let snapshot = match replay.term.snapshot() {
+            Ok(snapshot) => snapshot,
             Err(e) => {
                 self.error.get_or_insert(e);
+                return;
             }
+        };
+        // Over its limit, a restore may refuse pages of history; only trying
+        // tells.
+        if !replay.term.within_scrollback_limit()
+            && !vt::Terminal::restore(&snapshot)
+                .is_ok_and(|t| t.primary_pages() == replay.term.primary_pages())
+        {
+            return;
         }
+        self.last = Some((byte, replay.at_us()));
+        self.store.insert(Checkpoint {
+            key: CheckpointKey {
+                engine: self.store.engine.clone(),
+                pane: self.pane.clone(),
+                byte,
+            },
+            position: replay.position(),
+            at_us: replay.at_us(),
+            snapshot,
+        });
     }
 }

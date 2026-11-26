@@ -31,6 +31,22 @@ use libghostty_vt::terminal::Boundary;
 const CELL_WIDTH_PX: u32 = 10;
 const CELL_HEIGHT_PX: u32 = 20;
 
+/// How much history a terminal keeps above its active area.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Scrollback {
+    /// Everything, for reading a whole command's output.
+    Unlimited,
+    /// At most this many bytes of page memory, as Ghostty's
+    /// `scrollback-limit-bytes` configures it. libghostty-vt drops whole
+    /// pages of the oldest history to stay under it.
+    Bytes(usize),
+}
+
+/// Ghostty's default `scrollback-limit-bytes` at the commit libghostty-vt
+/// is built from (`src/config/Config.zig`): what a Ghostty window running
+/// the recorded program would have kept.
+pub const GHOSTTY_SCROLLBACK_BYTES: usize = 50_000_000;
+
 /// Something the engine failed to do.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VtError(String);
@@ -112,9 +128,10 @@ impl fmt::Debug for Terminal {
 }
 
 /// Identifies the engine for checkpoint keys: libghostty-vt's version, build
-/// metadata and optimisation mode, and the settings this module applies.
-/// Snapshots are only exchanged between terminals with the same fingerprint.
-pub fn engine_fingerprint() -> String {
+/// metadata and optimisation mode, and the settings this module applies,
+/// including the scrollback limit. Snapshots are only exchanged between
+/// terminals with the same fingerprint.
+pub fn engine_fingerprint(scrollback: Scrollback) -> String {
     let version = ghostty::build_info::version_string().to_string_lossy();
     let build = ghostty::build_info::build_version()
         .map(|b| String::from_utf8_lossy(b).into_owned())
@@ -122,22 +139,36 @@ pub fn engine_fingerprint() -> String {
     let optimize = ghostty::build_info::optimize_mode()
         .map(|m| format!("{m:?}"))
         .unwrap_or_else(|_| "unknown".into());
+    let scrollback = match scrollback {
+        Scrollback::Unlimited => "unlimited".to_string(),
+        Scrollback::Bytes(bytes) => bytes.to_string(),
+    };
     format!(
-        "libghostty-vt {version}{}{build} {optimize} cell={CELL_WIDTH_PX}x{CELL_HEIGHT_PX}",
+        "libghostty-vt {version}{}{build} {optimize} cell={CELL_WIDTH_PX}x{CELL_HEIGHT_PX} scrollback={scrollback}",
         if build.is_empty() { "" } else { "+" }
     )
 }
 
 impl Terminal {
     /// A fresh terminal of the given size.
-    pub fn new(cols: u16, rows: u16) -> Result<Self, VtError> {
+    pub fn new(cols: u16, rows: u16, scrollback: Scrollback) -> Result<Self, VtError> {
         let mut term = ghostty::Terminal::new(cols.max(1), rows.max(1)).map_err(err("new"))?;
         term.resize(cols.max(1), rows.max(1), CELL_WIDTH_PX, CELL_HEIGHT_PX)
             .map_err(err("resize"))?;
+        // `Some(usize::MAX)` is libghostty-vt's "no byte limit"; `None` would
+        // be its default of one page or so. No line limit either way.
+        let bytes = match scrollback {
+            Scrollback::Unlimited => usize::MAX,
+            Scrollback::Bytes(bytes) => bytes,
+        };
+        term.set_scrollback_max_bytes(Some(bytes))
+            .and_then(|t| t.set_scrollback_max_lines(None))
+            .map_err(err("scrollback limit"))?;
         Self::install(term)
     }
 
-    /// Restores a terminal from [`Terminal::snapshot`] bytes.
+    /// Restores a terminal from [`Terminal::snapshot`] bytes. The snapshot
+    /// carries the scrollback limit.
     pub fn restore(snapshot: &[u8]) -> Result<Self, VtError> {
         let decoder = ghostty::snapshot::Decoder::new_buf(snapshot).map_err(err("decoder"))?;
         let term = decoder.decode().map_err(err("decode snapshot"))?;
@@ -145,14 +176,6 @@ impl Terminal {
     }
 
     fn install(mut term: ghostty::Terminal<'static, 'static>) -> Result<Self, VtError> {
-        // Keep all scrollback. libghostty-vt prunes history a whole page at a
-        // time, and a terminal restored from a snapshot lays its pages out
-        // differently from the one that was encoded, so any limit would
-        // prune different rows after a seek than after a replay. A
-        // transcript also wants all of a long command's output.
-        term.set_scrollback_max_bytes(Some(usize::MAX))
-            .and_then(|t| t.set_scrollback_max_lines(None))
-            .map_err(err("scrollback limit"))?;
         let signals = Rc::new(RefCell::new(Vec::new()));
         let sink = Rc::clone(&signals);
         term.on_semantic_prompt(move |_, event| {
@@ -376,16 +399,19 @@ impl Terminal {
     /// hyperlink, protection, Kitty keyboard flags, character sets). Two
     /// terminals that print the same here look and behave the same.
     pub fn vt_dump(&self) -> Vec<u8> {
+        self.vt(self.term.select_all().ok().flatten())
+    }
+
+    fn vt(&self, selection: Option<Selection<'_>>) -> Vec<u8> {
         let Ok(mut formatter) = Formatter::new(&self.term) else {
             return Vec::new();
         };
-        let all = self.term.select_all().ok().flatten();
         let configured = formatter
             .set_format(Format::Vt)
             .and_then(|f| f.set_unwrap(false))
             .and_then(|f| f.set_trim(false))
             .and_then(|f| f.set_extras(Extras::ALL))
-            .and_then(|f| f.set_selection(all));
+            .and_then(|f| f.set_selection(selection));
         if configured.is_err() {
             return Vec::new();
         }
@@ -413,6 +439,110 @@ impl Terminal {
             .format_alloc(None)
             .map(|bytes| String::from_utf8_lossy(&bytes).trim_end().to_string())
             .unwrap_or_default()
+    }
+
+    /// Rows of the primary or alternate screen, whichever is active,
+    /// scrollback included.
+    pub fn total_rows(&self) -> usize {
+        self.term.total_rows().unwrap_or(0)
+    }
+
+    /// Drops the oldest pages of history until the terminal is within its
+    /// scrollback limit, as libghostty-vt does when the screen next grows a
+    /// page. See [`Terminal::within_scrollback_limit`].
+    pub fn enforce_scrollback_limit(&mut self) {
+        if let Ok(Some(limit)) = self.term.scrollback_max_bytes() {
+            // Setting the limit again enforces it and changes nothing else.
+            let _ = self.term.set_scrollback_max_bytes(Some(limit));
+        }
+    }
+
+    /// Whether the primary screen's pages fit its scrollback limit.
+    ///
+    /// libghostty-vt enforces the byte limit lazily: a column resize reflows
+    /// history into new pages, and a page that outgrows its pool item moves
+    /// to a larger allocation, without dropping old pages; the next page
+    /// the screen grows into drops as many as it takes to get back under the
+    /// limit. A snapshot holds every page, but the decoder refuses each page
+    /// of history that would put the restored screen over the limit, so a
+    /// terminal restored while over it comes back with fewer rows. Within
+    /// it, a restore brings back every page, unless the restored pages take
+    /// more room than the originals: the decoder rebuilds a page's
+    /// allocation from size hints, and a page with a large hyperlink table
+    /// can come back larger.
+    ///
+    /// The primary screen's resident page bytes are exactly the page
+    /// memory the limit counts while no page is compressed, which this
+    /// module never asks for. The alternate screen keeps no history.
+    pub fn within_scrollback_limit(&self) -> bool {
+        let Ok(Some(limit)) = self.term.scrollback_max_bytes() else {
+            return true;
+        };
+        self.term
+            .memory_usage()
+            .is_ok_and(|usage| usage.primary.resident_bytes <= limit as u64)
+    }
+
+    /// Pages in the primary screen, history included.
+    pub fn primary_pages(&self) -> u64 {
+        self.term
+            .memory_usage()
+            .map_or(0, |usage| usage.primary.pages)
+    }
+
+    /// Rows of the oldest line on the screen (scrollback included): the top
+    /// row and the rows it soft-wraps onto.
+    pub fn oldest_line_rows(&self) -> usize {
+        let total = self.total_rows();
+        let wrapped = |y: usize| {
+            u32::try_from(y).ok().is_some_and(|y| {
+                self.term
+                    .grid_ref(Point::Screen(Coordinate { x: 0, y }))
+                    .and_then(|r| r.row())
+                    .and_then(|row| row.is_wrapped())
+                    .unwrap_or(false)
+            })
+        };
+        (0..total)
+            .position(|y| !wrapped(y))
+            .map_or(total, |y| y + 1)
+    }
+
+    /// Selection of the newest `rows` rows of the screen, scrollback
+    /// included.
+    fn newest(&self, rows: usize) -> Option<Selection<'_>> {
+        let total = self.total_rows();
+        let rows = rows.min(total);
+        if rows == 0 {
+            return None;
+        }
+        let cols = self.size().0;
+        let first = u32::try_from(total - rows).ok()?;
+        let last = u32::try_from(total - 1).ok()?;
+        let a = self
+            .term
+            .grid_ref(Point::Screen(Coordinate { x: 0, y: first }))
+            .ok()?;
+        let b = self
+            .term
+            .grid_ref(Point::Screen(Coordinate {
+                x: cols.saturating_sub(1),
+                y: last,
+            }))
+            .ok()?;
+        Some(Selection::new(&self.term, a, b, false))
+    }
+
+    /// The newest `rows` rows of the screen (scrollback included) as VT
+    /// sequences with every extra, like [`Terminal::vt_dump`].
+    pub fn vt_dump_newest(&self, rows: usize) -> Vec<u8> {
+        self.vt(self.newest(rows))
+    }
+
+    /// Plain text of the newest `rows` rows of the screen, scrollback
+    /// included, like [`Terminal::screen_text`].
+    pub fn text_newest(&self, rows: usize) -> String {
+        self.format(self.newest(rows))
     }
 
     /// Encodes the complete terminal state. The stream must be at ground.
