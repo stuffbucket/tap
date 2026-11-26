@@ -35,11 +35,21 @@ This invokes `scripts/build-all.ts`, which runs:
 
 Generated binaries are written under `native/bin/`; generated dependency trees and WASM are under `.cache/`. Both locations are intentionally ignored by Git.
 
+## The Rust index (`tap transcript`)
+
+`crates/tap-index` builds the `tap-index` binary that `tap transcript` runs. It is not part of `bun run build`, `scripts/build-app.ts` or Tap.app, because the macOS release builder has no Rust toolchain yet. Build it from a checkout:
+
+```sh
+mise x rust@1.99.0 zig@0.17.1 -- cargo build --release -p tap-index
+```
+
+The first build clones Ghostty at the pinned `vt-1.0.1` commit (so it needs network access) and builds libghostty-vt with Zig, as ReleaseSafe in every profile (see `.cargo/config.toml`). `tap transcript` looks for the binary in `target/release`, then `target/debug` (or under `CARGO_TARGET_DIR`), and prints this command when it finds neither.
+
 ## Checks
 
 ```sh
 mise x bun@1.4.3 -- bun run check
-mise x rust@1.99.0 bun@1.4.3 -- bun run check:rust
+mise x rust@1.99.0 zig@0.17.1 bun@1.4.3 -- bun run check:rust
 mise x bun@1.4.3 -- bun run test:e2e
 mise x bun@1.4.3 -- bun run test:vhs-upstream
 mise x bun@1.4.3 -- bun src/cli.ts doctor

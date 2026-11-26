@@ -21,9 +21,12 @@ async function download(name: string, url: string): Promise<string> {
 const bunLicense = await download("Bun-LICENSE.txt", "https://raw.githubusercontent.com/oven-sh/bun/main/LICENSE.md")
 const ofl = await download("SIL-OFL-1.1.txt", "https://raw.githubusercontent.com/JetBrains/JetBrainsMono/master/OFL.txt")
 const skia = await download("Skia-LICENSE.txt", "https://raw.githubusercontent.com/google/skia/main/LICENSE")
+// Pinned to the commit crates/tap-index/Cargo.toml depends on.
+const libghosttyRs = await download("libghostty-rs-LICENSE.txt", "https://raw.githubusercontent.com/Uzaaft/libghostty-rs/81eaf6a27494d9a5b6f66a1f7d7195c14bc69b97/LICENSE")
 
 const components: Array<{ name: string; source: string; license: string; files: string[]; note?: string }> = [
   { name: "Ghostty and libghostty-vt", source: "https://github.com/ghostty-org/ghostty", license: "MIT", files: [resolve(root, ".cache/libghostty-vt-src/LICENSE")] },
+  { name: "libghostty-rs (libghostty-vt Rust bindings)", source: "https://github.com/Uzaaft/libghostty-rs", license: "MIT", files: [libghosttyRs], note: "Used by the tap-index tool (crates/tap-index), which is built from source and not yet part of Tap.app." },
   { name: "Charmbracelet VHS", source: "https://github.com/charmbracelet/vhs", license: "MIT", files: [resolve(root, ".cache/vhs-upstream-0.12.1/LICENSE")] },
   { name: "Termless", source: "https://github.com/beorn/termless", license: "MIT", files: [resolve(root, "node_modules/@termless/core/LICENSE")] },
   { name: "ghostty-web", source: "https://github.com/coder/ghostty-web", license: "MIT", files: [resolve(root, "node_modules/@termless/ghostty/node_modules/ghostty-web/LICENSE")] },

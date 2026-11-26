@@ -1,0 +1,2827 @@
+{
+  "version": 1,
+  "title": "tap-index fixture: zsh with Tap's shell integration, input recorded",
+  "createdAt": "2026-11-26T07:41:33.102Z",
+  "durationUs": 23156075,
+  "canvas": {
+    "width": 1280,
+    "height": 720,
+    "background": "#101014",
+    "fps": 60
+  },
+  "panes": [
+    {
+      "id": "main",
+      "cols": 80,
+      "rows": 24,
+      "fontSize": 16,
+      "layout": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "events": [
+        {
+          "atUs": 16177,
+          "type": "resize",
+          "cols": 80,
+          "rows": 24
+        },
+        {
+          "atUs": 29386,
+          "type": "output",
+          "data": "G1sxbRtbN20lG1syN20bWzFtG1swbSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANIA0=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 29660,
+          "type": "output",
+          "data": "G10xMzM7UAc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 32204,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 543029,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 543374,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 587663,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 587867,
+          "type": "output",
+          "data": "CGVj",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 633682,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 633882,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 679789,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 680068,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 725873,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 726168,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 771957,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 772164,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 820028,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 820143,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 866164,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 866377,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 912206,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 912395,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 958371,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 958616,
+          "type": "output",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1004477,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "fw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1004756,
+          "type": "output",
+          "data": "CCAI",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1155574,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1155870,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1200873,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1201073,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1246979,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1247266,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1293010,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1293241,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1338690,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1338981,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1384706,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1384925,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1430790,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1431005,
+          "type": "output",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1727335,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1727657,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1731301,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1lY2hvJTIwaGVsbG8lMjB3b3JsZAc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1731613,
+          "type": "output",
+          "data": "aGVsbG8gd29ybGQNChtbMW0bWzdtJRtbMjdtG1sxbRtbMG0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDSANG10xMzM7RDswBxtdMTMzO1AH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 1731787,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2439239,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2439490,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2485320,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2485526,
+          "type": "output",
+          "data": "CGNh",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2531088,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2531373,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2576403,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2576608,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2622166,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2622416,
+          "type": "output",
+          "data": "Lw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2668307,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2668506,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2714224,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2714369,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2759919,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2760265,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2806529,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2806725,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2852631,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2852804,
+          "type": "output",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2898299,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2898528,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2944380,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2944598,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2990470,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 2990802,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3036440,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3036701,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3082148,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3082491,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3128207,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3128467,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3173790,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "LQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3173968,
+          "type": "output",
+          "data": "LQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3219888,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3220090,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3265958,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3266136,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3311163,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3311402,
+          "type": "output",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3357216,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "LQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3357436,
+          "type": "output",
+          "data": "LQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3403252,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3403446,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3449372,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3449618,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3495062,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3495254,
+          "type": "output",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3541248,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3541473,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3587195,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3587376,
+          "type": "output",
+          "data": "dQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3633256,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3633394,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3679338,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3679572,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3976481,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3976960,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3979791,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1jYXQlMjAvbm9uZXhpc3RlbnQtdGFwLWZpeHR1cmUH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3993047,
+          "type": "output",
+          "data": "Y2F0OiAvbm9uZXhpc3RlbnQtdGFwLWZpeHR1cmU6IE5vIHN1Y2ggZmlsZSBvciBkaXJlY3RvcnkNCg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3993465,
+          "type": "output",
+          "data": "G1sxbRtbN20lG1syN20bWzFtG1swbSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANIA0=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3993568,
+          "type": "output",
+          "data": "G10xMzM7RDsxBxtdMTMzO1AH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 3993640,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4698843,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4699367,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4744443,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4744738,
+          "type": "output",
+          "data": "CGVj",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4790928,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4791088,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4836951,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4837118,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4882220,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4882446,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4928264,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4928417,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4974146,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 4974304,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5020189,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "w6k=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5020372,
+          "type": "output",
+          "data": "w6k=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5066080,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5066300,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5112113,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5112301,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5158175,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5158334,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5204054,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5204269,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5249714,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5249858,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5295774,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "w7Y=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5295931,
+          "type": "output",
+          "data": "w7Y=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5341879,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5342082,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5387535,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5387717,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5433576,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5433765,
+          "type": "output",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5479637,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5479816,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5524931,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "4pyT",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5525165,
+          "type": "output",
+          "data": "4pyT",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5570959,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5571163,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5616773,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "5pel",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5616946,
+          "type": "output",
+          "data": "5pel",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5662895,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "5pys",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5663132,
+          "type": "output",
+          "data": "5pys",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5707991,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "6Kqe",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5708179,
+          "type": "output",
+          "data": "6Kqe",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5754077,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 5754303,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6051009,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6051354,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6054733,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1lY2hvJTIwJTI3aCVDMyVBOWxsbyUyMHclQzMlQjZybGQlMjAlRTIlOUMlOTMlMjAlRTYlOTclQTUlRTYlOUMlQUMlRTglQUElOUUlMjcH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6054963,
+          "type": "output",
+          "data": "aMOpbGxvIHfDtnJsZCDinJMg5pel5pys6KqeDQobWzFtG1s3bSUbWzI3bRtbMW0bWzBtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0gDRtdMTMzO0Q7MAcbXTEzMztQBw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6055144,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6761873,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6762196,
+          "type": "output",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6808396,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6808615,
+          "type": "output",
+          "data": "CHBy",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6854356,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6854492,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6899706,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6899867,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6945783,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6945930,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6991841,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 6992019,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7037922,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7038125,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7083547,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7083738,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7129619,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7129863,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7175475,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7175615,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7220846,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7220945,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7266334,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7266447,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7312370,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7312480,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7357422,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7357566,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7403443,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7403526,
+          "type": "output",
+          "data": "dw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7448545,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7448664,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7494567,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7494669,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7540605,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7540725,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7586713,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7586900,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7632848,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7633086,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7678634,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7678817,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7724673,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7724859,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7770132,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7770267,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7816674,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7816856,
+          "type": "output",
+          "data": "XA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7865498,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7865859,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7910697,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 7910909,
+          "type": "output",
+          "data": "Jw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 8208017,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 8208327,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 8211494,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1wcmludGYlMjAlMjdvbmUlNUNudHdvJTVDbnRocmVlJTVDbiUyNwc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 8211618,
+          "type": "output",
+          "data": "b25lDQp0d28NCnRocmVlDQobWzFtG1s3bSUbWzI3bRtbMW0bWzBtICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIA0gDRtdMTMzO0Q7MAcbXTEzMztQBw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 8211702,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11220589,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11221160,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11265785,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11265998,
+          "type": "output",
+          "data": "CGVj",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11311740,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11311869,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11357311,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11357511,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11403456,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11403718,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11449463,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11449679,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11495624,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11495862,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11541012,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11541247,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11586373,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11586648,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11632383,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11632602,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11678435,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11678594,
+          "type": "output",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11724433,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11724622,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11770164,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11770395,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11815860,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11815940,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11862213,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11862378,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11907981,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11908201,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11953543,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11953729,
+          "type": "output",
+          "data": "cA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11999560,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 11999738,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12045599,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12045769,
+          "type": "output",
+          "data": "Mg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12091326,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Lg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12091560,
+          "type": "output",
+          "data": "Lg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12137307,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "NQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12137511,
+          "type": "output",
+          "data": "NQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12183470,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12183718,
+          "type": "output",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12229456,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12229654,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12275315,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12275464,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12321429,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12321660,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12367418,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12367548,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12412977,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12413158,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12458940,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12459035,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12504089,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12504215,
+          "type": "output",
+          "data": "ZA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12550225,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12550470,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12596163,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12596254,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12641775,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12641968,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12939586,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12940015,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12943482,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1lY2hvJTIwc3RhcnQlM0IlMjBzbGVlcCUyMDIuNSUzQiUyMGVjaG8lMjBkb25lBw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 12943664,
+          "type": "output",
+          "data": "c3RhcnQNCg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 15459162,
+          "type": "output",
+          "data": "ZG9uZQ0K",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 15459390,
+          "type": "output",
+          "data": "G1sxbRtbN20lG1syN20bWzFtG1swbSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANIA0bXTEzMztEOzAHG10xMzM7UAc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 15459498,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16165104,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16165252,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16211210,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16211365,
+          "type": "output",
+          "data": "CGxl",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16257172,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16257318,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16303409,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16303739,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16349066,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16349222,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16395028,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16395185,
+          "type": "output",
+          "data": "bg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16441190,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16441388,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16487209,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16487413,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16533281,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16533447,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16579293,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16579395,
+          "type": "output",
+          "data": "cw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16624549,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Lg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16624732,
+          "type": "output",
+          "data": "Lg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16669980,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16670175,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16715206,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16715387,
+          "type": "output",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16761316,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 16761631,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17059210,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17059487,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17062721,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1sZXNzJTIwbm90ZXMudHh0Bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17080197,
+          "type": "output",
+          "data": "G1s/MTA0OWgbWzI0OzFIG1s/MWgbPQ1maXJzdCBsaW5lIG9mIG5vdGVzDQpzZWNvbmQgbGluZSBvZiBub3Rlcw0KdGhpcmQgbGluZSBvZiBub3Rlcw0KG1s3bW5vdGVzLnR4dCAoRU5EKRtbMjdtG1tL",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17681666,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 17681903,
+          "type": "output",
+          "data": "DRtbSwcNG1tLG1s3bShFTkQpG1syN20bW0s=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18233155,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18233519,
+          "type": "output",
+          "data": "DRtbSxtbPzFsGz4bWz8xMDQ5bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18237395,
+          "type": "output",
+          "data": "G1sxbRtbN20lG1syN20bWzFtG1swbSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANIA0=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18237529,
+          "type": "output",
+          "data": "G10xMzM7RDswBxtdMTMzO1AH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18237666,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18945357,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18945654,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18991062,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 18991245,
+          "type": "output",
+          "data": "CGVj",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19037016,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19037186,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19082839,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19082940,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19128672,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19128782,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19174741,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19174881,
+          "type": "output",
+          "data": "Yg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19219909,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19220131,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19265943,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19266117,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19312019,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19312188,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19358034,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19358191,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19403735,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19403918,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19449552,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19449729,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19495589,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19495750,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19541604,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19541701,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19587660,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19587810,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19633710,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19633827,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19679799,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19680003,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19725791,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19725899,
+          "type": "output",
+          "data": "Ow==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19771788,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19771870,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19818293,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19818383,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19863690,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19863808,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19908788,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19908931,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19954823,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 19955032,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20000816,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20000896,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20297037,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20297155,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20299671,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1lY2hvJTIwYmVmb3JlJTIwY2xlYXIlM0IlMjBjbGVhcgc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20299822,
+          "type": "output",
+          "data": "YmVmb3JlIGNsZWFyDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20308864,
+          "type": "output",
+          "data": "G1szShtbSBtbMko=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20309274,
+          "type": "output",
+          "data": "G1sxbRtbN20lG1syN20bWzFtG1swbSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICANIA0=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20309322,
+          "type": "output",
+          "data": "G10xMzM7RDswBxtdMTMzO1AH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 20309367,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21019750,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21020111,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21065704,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21065809,
+          "type": "output",
+          "data": "CGVj",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21111739,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21111883,
+          "type": "output",
+          "data": "aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21156775,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21156834,
+          "type": "output",
+          "data": "bw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21202798,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21202859,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21248815,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21248886,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21294892,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21294975,
+          "type": "output",
+          "data": "Zg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21340908,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21340969,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21386906,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21386979,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21432922,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21432981,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21478943,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21479009,
+          "type": "output",
+          "data": "IA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21524853,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21524918,
+          "type": "output",
+          "data": "Yw==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21570879,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21570946,
+          "type": "output",
+          "data": "bA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21616896,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21616957,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21662511,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21662600,
+          "type": "output",
+          "data": "YQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21708063,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 21708125,
+          "type": "output",
+          "data": "cg==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22004738,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22004857,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22006155,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1lY2hvJTIwYWZ0ZXIlMjBjbGVhcgc=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22006233,
+          "type": "output",
+          "data": "YWZ0ZXIgY2xlYXINChtbMW0bWzdtJRtbMjdtG1sxbRtbMG0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgDSANG10xMzM7RDswBxtdMTMzO1AH",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22006313,
+          "type": "output",
+          "data": "DRtbMG0bWzI3bRtbMjRtG1tKdGFwJCAbW0sbWz8yMDA0aA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22717717,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22717791,
+          "type": "output",
+          "data": "ZQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22763740,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "eA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22763801,
+          "type": "output",
+          "data": "CGV4",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22810011,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22810074,
+          "type": "output",
+          "data": "aQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22856037,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 22856108,
+          "type": "output",
+          "data": "dA==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 23152980,
+          "type": "input",
+          "origin": "keyboard",
+          "data": "DQ==",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 23153053,
+          "type": "output",
+          "data": "G1s/MjAwNGwNDQo=",
+          "encoding": "base64"
+        },
+        {
+          "atUs": 23154152,
+          "type": "output",
+          "data": "G10xMzM7QztjbWRsaW5lX3VybD1leGl0Bw==",
+          "encoding": "base64"
+        }
+      ]
+    }
+  ],
+  "overlays": [],
+  "metadata": {
+    "terminal": "ghostty",
+    "terminalEngine": "libghostty-vt 1.0.1",
+    "timebase": "microseconds",
+    "source": "interactive-pty",
+    "shellIntegration": [
+      "zsh"
+    ]
+  }
+}

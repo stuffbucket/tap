@@ -14,6 +14,7 @@ import { startLiveCapture } from "./live.ts"
 import { startNativeLiveCapture } from "./native-live.ts"
 import { renderGhosttyFrame, uniformFrameSizes } from "./ghostty-full.ts"
 import { TAP_VERSION } from "./version.ts"
+import { printTranscript } from "./transcript.ts"
 
 /** The CLI launcher inside Tap.app (absent when running from a source checkout). */
 const bundledCli = resolve(import.meta.dir, "../bin/tap")
@@ -282,6 +283,16 @@ program
       process.once("SIGINT", stop)
       process.once("SIGTERM", stop)
     })
+  })
+
+program
+  .command("transcript")
+  .description("Print a recording's transcript, one block per command (runs the Rust tap-index binary)")
+  .argument("<recording>", ".tap JSON project or Session.tap package")
+  .option("--json", "print the transcript as JSON")
+  .action(async (recording: string, options: { json?: boolean }) => {
+    const code = await printTranscript(recording, options)
+    if (code !== 0) process.exitCode = code
   })
 
 program
