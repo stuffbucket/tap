@@ -97,6 +97,14 @@ bun src/cli.ts capture --input-policy redact -o demo.tap -- zsh
 bun src/cli.ts capture --input-policy omit -o demo.tap -- zsh
 ```
 
+When the recorded program is zsh, Tap has it mark each prompt, each command and its exit status with OSC 133 escape sequences, so a recording can later be split into commands. Nothing on screen changes:
+
+- Your own `.zshenv`, `.zprofile`, `.zshrc` and `.zlogin` run as usual, and your prompt is not modified.
+- Tap steps aside if your configuration already loads another terminal's shell integration.
+- The command line is written into the recording only with `--input-policy record`, so redacted input never reappears in the output.
+
+fish 4 and newer writes these marks itself. `--no-shell-integration` turns this off for `capture` and `launch`, and the recording's `metadata.shellIntegration` lists the shells that were set up.
+
 ## Capture splits
 
 ```sh

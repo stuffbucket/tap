@@ -106,6 +106,8 @@ export interface TapProject {
     terminalEngine: string
     timebase: "microseconds"
     source?: string
+    /** Shells that were set up to write OSC 133 prompt and command marks during capture. */
+    shellIntegration?: string[]
   }
 }
 

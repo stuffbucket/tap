@@ -1,0 +1,93 @@
+# Tap shell integration for interactive zsh: OSC 133 semantic prompt marks.
+#
+# Only three marks are written, and none of them changes what is on screen:
+#
+#   OSC 133;P              a prompt is about to be drawn
+#   OSC 133;C[;cmdline_url=...]  the command line was accepted; output follows
+#   OSC 133;D;<status>     the command finished with this exit status
+#
+# P is used rather than A because A asks the terminal for a fresh line, which
+# would move the cursor. PS1 is never modified, so prompt themes are untouched.
+# The command line is included only when Tap records input
+# (TAP_SHELL_INTEGRATION_CMDLINE=1); otherwise redacted input would leak into
+# the output stream.
+
+builtin typeset -gi _tap_cmdline=${TAP_SHELL_INTEGRATION_CMDLINE:-0}
+builtin unset TAP_SHELL_INTEGRATION_CMDLINE
+builtin typeset -gi _tap_running=0
+
+# Hooks are installed at the first prompt, after the user's .zshrc has run, so
+# they can be ordered around the user's own hooks and can step aside for
+# another integration.
+_tap_install() {
+  builtin emulate -L zsh
+  precmd_functions=(${precmd_functions:#_tap_install})
+  builtin unfunction _tap_install
+
+  # Another terminal's integration already writes OSC 133 (for example the
+  # user's .zshrc sources it because TERM_PROGRAM is ghostty). Writing our
+  # marks as well would split every command twice.
+  builtin local hook
+  for hook in $precmd_functions $preexec_functions; do
+    case $hook in
+      (_ghostty_*|__vsc_*|iterm2_*|__wezterm_*|_kitty_*|__kitty_*)
+        builtin unfunction _tap_status _tap_prompt _tap_preexec _tap_encode
+        return ;;
+    esac
+  done
+  if [[ $PS1 == *$'\e]133;'* || $PROMPT == *$'\e]133;'* ]]; then
+    builtin unfunction _tap_status _tap_prompt _tap_preexec _tap_encode
+    return
+  fi
+
+  # _tap_status runs first so $? is still the command's status; _tap_prompt
+  # runs last so output from the user's own precmd hooks precedes the prompt
+  # mark. _tap_preexec runs first so the output of other preexec hooks is
+  # attributed to the command.
+  precmd_functions=(_tap_status ${precmd_functions:#_tap_*} _tap_prompt)
+  preexec_functions=(_tap_preexec ${preexec_functions:#_tap_*})
+  _tap_prompt
+}
+
+_tap_status() {
+  builtin local status_=$?
+  if (( _tap_running )); then
+    builtin print -rn -- $'\e]133;D;'"$status_"$'\a'
+    _tap_running=0
+  fi
+}
+
+_tap_prompt() {
+  builtin print -rn -- $'\e]133;P\a'
+}
+
+_tap_preexec() {
+  _tap_running=1
+  if (( _tap_cmdline )); then
+    builtin print -rn -- $'\e]133;C;cmdline_url='"$(_tap_encode "$1")"$'\a'
+  else
+    builtin print -rn -- $'\e]133;C\a'
+  fi
+}
+
+# Percent-encodes a command line byte by byte (RFC 3986 unreserved characters
+# plus a few that are safe inside an OSC string), as libghostty-vt decodes
+# cmdline_url.
+_tap_encode() {
+  builtin emulate -L zsh
+  builtin setopt localoptions nomultibyte
+  builtin local s=$1 out= c
+  builtin integer i n=${#s}
+  for (( i = 1; i <= n; i++ )); do
+    c=${s[i]}
+    if [[ $c == [A-Za-z0-9._~/,:=+@-] ]]; then
+      out+=$c
+    else
+      out+=%${(l:2::0:)$(( [##16] #c ))}
+    fi
+  done
+  builtin print -rn -- $out
+}
+
+builtin typeset -ga precmd_functions preexec_functions
+precmd_functions+=(_tap_install)

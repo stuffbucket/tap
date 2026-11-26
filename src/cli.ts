@@ -50,6 +50,7 @@ program
   .option("--font-size <number>", "font size", "16")
   .option("--no-interactive", "do not forward keyboard input")
   .option("--input-policy <policy>", "record, redact, or omit input bytes", "record")
+  .option("--no-shell-integration", "do not have zsh mark prompts and commands (OSC 133)")
   .argument("<command...>")
   .allowUnknownOption(true)
   .action(async (command: string[], options: Record<string, string | boolean>) => {
@@ -73,6 +74,7 @@ program
       interactive: options.interactive !== false,
       mirrorOutput: true,
       inputPolicy,
+      shellIntegration: options.shellIntegration !== false,
     })
     await writeProject(String(options.output), project)
     process.stderr.write(`\nSaved ${options.output} (${project.durationUs}µs, ${project.panes[0]!.events.length} events)\n`)
@@ -349,7 +351,8 @@ program
   .description("What opening Tap.app does: record a shell in this terminal, then open the recording in the player")
   .option("--dir <path>", "folder for recordings", join(homedir(), "Movies/Tap"))
   .option("--no-open", "do not open the player in a browser afterwards")
-  .action(async (options: { dir: string; open: boolean }) => {
+  .option("--no-shell-integration", "do not have zsh mark prompts and commands (OSC 133)")
+  .action(async (options: { dir: string; open: boolean; shellIntegration: boolean }) => {
     // The first launch checks every bundled component before anything is recorded.
     const support = join(homedir(), "Library/Application Support/Tap")
     const checked = join(support, "doctor-passed")
@@ -381,7 +384,7 @@ program
     const project = await captureProject({
       title: `${basename(shell)} — ${name.replace(/\.tap$/, "")}`,
       panes: [{ id: "main", command: [shell, "-l"], cols: process.stdout.columns || 80, rows: process.stdout.rows || 24, fontSize: 16 }],
-    }, { interactive: true, mirrorOutput: true, inputPolicy: "record" })
+    }, { interactive: true, mirrorOutput: true, inputPolicy: "record", shellIntegration: options.shellIntegration })
     await writeProject(output, project)
     console.log(`\n\x1b[1m■\x1b[0m Saved ${output} (${(project.durationUs / 1_000_000).toFixed(1)}s)`)
 

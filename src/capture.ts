@@ -5,12 +5,18 @@ import { KittyNormalizer } from "./kitty-normalizer.ts"
 import { TAP_VERSION } from "./version.ts"
 import { AltScreenTracker } from "./terminal-modes.ts"
 import { QueryFilter } from "./mirror-filter.ts"
+import { withShellIntegration, type IntegratedShell } from "./shell-integration.ts"
 
 export interface CaptureOptions {
   interactive?: boolean
   mirrorOutput?: boolean
   /** Input is recorded by default. Redact keeps timing/provenance; omit stores nothing. */
   inputPolicy?: "record" | "redact" | "omit"
+  /**
+   * Have supported shells mark prompts and commands with OSC 133, so a recording can be split
+   * into commands. On by default; the marks don't change what is on screen.
+   */
+  shellIntegration?: boolean
 }
 
 interface PtyHandle {
@@ -68,6 +74,7 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
   // Modes the mirrored program turns on in the user's terminal are restored when capture ends.
   const mirroredScreen = new AltScreenTracker()
   const mirrorFilter = new QueryFilter()
+  const integratedShells = new Set<IntegratedShell>()
 
   try {
     for (const [index, paneSpec] of spec.panes.entries()) {
@@ -96,16 +103,24 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
           ...(paneSpec.kittyFileRoots ? { allowedRoots: paneSpec.kittyFileRoots } : {}),
         }),
       }
+      let env: Record<string, string | undefined> = {
+        ...process.env,
+        TERM: "xterm-ghostty",
+        COLORTERM: "truecolor",
+        TERM_PROGRAM: "ghostty",
+        TERM_PROGRAM_VERSION: `tap/${TAP_VERSION}`,
+        ...paneSpec.env,
+      }
+      if (options.shellIntegration !== false) {
+        const integrated = withShellIntegration(paneSpec.command, env, {
+          commandLines: (options.inputPolicy ?? "record") === "record",
+        })
+        env = integrated.env
+        if (integrated.shell) integratedShells.add(integrated.shell)
+      }
       const child = Bun.spawn(paneSpec.command, {
         ...(paneSpec.cwd ? { cwd: paneSpec.cwd } : {}),
-        env: {
-          ...process.env,
-          TERM: "xterm-ghostty",
-          COLORTERM: "truecolor",
-          TERM_PROGRAM: "ghostty",
-          TERM_PROGRAM_VERSION: `tap/${TAP_VERSION}`,
-          ...paneSpec.env,
-        },
+        env: Object.fromEntries(Object.entries(env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
         terminal: {
           cols,
           rows,
@@ -263,6 +278,7 @@ export async function captureProject(spec: CaptureSpec, options: CaptureOptions 
       terminalEngine: "libghostty-vt 1.0.1",
       timebase: "microseconds",
       source: options.interactive ? "interactive-pty" : "pty",
+      ...(integratedShells.size ? { shellIntegration: [...integratedShells].sort() } : {}),
     },
   }
 }
