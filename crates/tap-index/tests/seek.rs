@@ -356,13 +356,18 @@ fn seek_matches_replay_on_a_long_session_with_periodic_checkpoints() {
     assert!(pane.stream_len > 1_500_000);
 
     // Checkpoints at least every 256 KiB or 10 s (they are taken at the
-    // first ground point after either budget runs out).
+    // first ground point after either budget runs out), unless one would
+    // store more than its allowance: then it waits for the output that
+    // pays for it, at most the largest snapshot's worth.
     let checkpoints: Vec<_> = index.checkpoints().pane(&pane.pane).collect();
+    let largest = checkpoints.iter().map(|c| c.snapshot_len()).max().unwrap();
     for pair in checkpoints.windows(2) {
         let bytes = pair[1].key.byte - pair[0].key.byte;
         let time = pair[1].at_us - pair[0].at_us;
         assert!(
-            bytes <= 256 * 1024 + 64 * 1024 || time <= 10_000_000 + 400_000,
+            bytes <= 256 * 1024 + 64 * 1024
+                || time <= 10_000_000 + 400_000
+                || bytes <= largest / tap_index::replay::CHECKPOINT_RATIO + 64 * 1024,
             "{} bytes and {time}µs between checkpoints at {} and {}",
             bytes,
             pair[0].key.byte,
