@@ -30,6 +30,7 @@
 
 pub mod excise;
 pub mod mask;
+pub mod redact;
 pub mod replace;
 pub mod search;
 pub mod state;
