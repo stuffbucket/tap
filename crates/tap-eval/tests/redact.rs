@@ -152,7 +152,7 @@ fn no_copy_of_the_secret_survives_outside_the_raw_events() {
     // it), and indexes built from them.
     let mut entries = session.edits.edits.clone();
     entries.extend(redaction.edits.iter().cloned());
-    let baked = tap_eval::bake::bake(&session, &raw, &entries, evaluation);
+    let baked = tap_eval::bake::bake(&session, &raw, &entries, evaluation).unwrap();
     let dir = std::env::temp_dir().join(format!("tap-eval-nowhere-{}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     tap_model::package::create(&dir, &baked).unwrap();

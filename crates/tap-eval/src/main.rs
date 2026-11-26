@@ -153,6 +153,7 @@ fn describe(entries: &[EditEntry], evaluation: &Evaluation) -> String {
                 )
             }
             Outcome::Inert { reason } => format!("no effect: {reason}"),
+            Outcome::PreBake { reason } => format!("refused: {reason}"),
         };
         out.push_str(&format!("#{index} {}: {what}\n", entry.op.name()));
     }
@@ -196,7 +197,8 @@ fn run(args: Vec<String>) -> Result<(), String> {
                 evaluate_entries(&session, &raw, &entries).map_err(|e| format!("{path}: {e}"))?;
             if command == "apply" {
                 let out = args.out.ok_or(format!("apply needs --out\n{USAGE}"))?;
-                let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation);
+                let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation)
+                    .map_err(|e| format!("{path}: {e}"))?;
                 if out.to_string_lossy().ends_with('/') {
                     tap_model::package::create(&out, &baked).map_err(|e| e.to_string())?;
                 } else if !baked.edits.edits.is_empty() {

@@ -97,7 +97,10 @@ the pane's *playback stream*: each `output` event's `playbackData` when it has
 one, its `data` otherwise, concatenated; the stream that is replayed and
 indexed). Every byte coordinate in the list (segments, byte ranges, mask
 anchors) counts that stream. `"enabled": false` keeps an entry
-without effect. The full op list is `tap_model::edl::EditOp`.
+without effect. `"preBake": true` marks an entry copied from a recording
+that was later baked into this one whose byte coordinates could not be
+moved onto the new bytes: it is kept, but evaluating it enabled is refused
+(`edl::PRE_BAKE`). The full op list is `tap_model::edl::EditOp`.
 
 ## `.tlog` byte layout (version 1)
 

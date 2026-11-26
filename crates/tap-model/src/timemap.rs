@@ -37,7 +37,8 @@
 //!   or inside a cut is *inert*: it has no effect, and its index is reported
 //!   by [`TimeMap::inert_ops`]. Holds are never scaled by speed.
 //!
-//! Disabled entries are ignored. Byte-changing and render-time ops, typing
+//! Disabled entries are ignored. An enabled entry marked `preBake` (see
+//! [`crate::edl::PRE_BAKE`]) is refused with [`EvalError::Invalid`]. Byte-changing and render-time ops, typing
 //! retiming and speed ramps make [`TimeMap::build`] fail with
 //! [`EvalError::Unsupported`], listing every such op. `tap-eval` evaluates
 //! whole edit lists: it builds this map from the time-only ops plus a skip
@@ -445,6 +446,13 @@ impl TimeMap {
             return Err(EvalError::Unsupported(rejected));
         }
 
+        if let Some((index, entry)) = enabled().find(|(_, e)| e.pre_bake) {
+            return Err(EvalError::Invalid {
+                index,
+                op: entry.op.name(),
+                reason: crate::edl::PRE_BAKE.into(),
+            });
+        }
         let duration = timeline.duration_us();
         let (mut lo, mut lo_by, mut hi, mut hi_by) = (0, 0, duration, 0);
         let mut cuts = Vec::new();

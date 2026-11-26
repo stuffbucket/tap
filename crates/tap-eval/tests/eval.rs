@@ -316,13 +316,17 @@ fn random_edit_lists_never_panic_and_round_trip() {
             (session, raw)
         })
         .collect();
-    let (mut ok, mut errors, mut excised, mut replaced) = (0, 0, 0, 0);
+    let (mut ok, mut errors, mut excised, mut replaced, mut baked_ok) = (0, 0, 0, 0, 0);
     for round in 0..150 {
         let (session, raw) = &indexes[rng.below(indexes.len() as u64) as usize];
         let entries: Vec<EditEntry> = (0..1 + rng.below(6))
-            .map(|_| EditEntry {
-                enabled: rng.below(8) != 0,
-                op: random_op(&mut rng, raw, session),
+            .map(|_| {
+                let op = random_op(&mut rng, raw, session);
+                if rng.below(8) != 0 {
+                    EditEntry::new(op)
+                } else {
+                    EditEntry::disabled(op)
+                }
             })
             .collect();
         let evaluation = match evaluate_entries(session, raw, &entries) {
@@ -370,9 +374,29 @@ fn random_edit_lists_never_panic_and_round_trip() {
                 assert_eq!(observe(&seek), observe(&replay), "round {round}: seek {t}");
             }
         }
-        let _ = tap_eval::bake::bake(session, raw, &entries, &evaluation);
+        // A bake keeps every mask: the export, evaluated, covers the same
+        // cells over the same times (and possibly more).
+        match tap_eval::bake::bake(session, raw, &entries, &evaluation) {
+            Ok(mut baked) => {
+                let edits = std::mem::take(&mut baked.edits.edits);
+                let raw_baked = SessionIndex::build(&baked).unwrap();
+                let again = evaluate_entries(&baked, &raw_baked, &edits)
+                    .unwrap_or_else(|e| panic!("round {round}: the export does not evaluate: {e}"));
+                for region in &evaluation.masks {
+                    assert!(
+                        again.masks.iter().any(|m| m.spans == region.spans),
+                        "round {round}: a mask was lost in the bake"
+                    );
+                }
+                baked_ok += 1;
+            }
+            Err(tap_eval::bake::BakeError::Uncarried(_)) => {}
+        }
     }
-    println!("{ok} evaluated, {errors} invalid, {excised} excised, {replaced} replaced");
+    println!(
+        "{ok} evaluated, {errors} invalid, {excised} excised, {replaced} replaced, {baked_ok} baked"
+    );
+    assert_eq!(baked_ok, ok);
     // The random lists exercise the interesting paths.
     assert!(ok > 75 && errors > 0, "{ok} evaluated, {errors} invalid");
     assert!(
@@ -387,7 +411,7 @@ fn an_export_of_an_excision_indexes_as_the_edited_session() {
     let raw = SessionIndex::build(&session).unwrap();
     let entries = vec![EditEntry::new(excise(347, 653))];
     let evaluation = evaluate_entries(&session, &raw, &entries).unwrap();
-    let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation);
+    let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation).unwrap();
     // The excision's time cut stays, as a skip.
     assert_eq!(baked.edits.edits.len(), 1);
     assert_eq!(baked.edits.edits[0].op.name(), "skip");

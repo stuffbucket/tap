@@ -33,7 +33,7 @@ tap-eval redact session.tap sk-live-4f9a2b      # planned edits + what remains
 
 `--edits` takes an `edits.json` document or a JSON array of ops; without it
 the recording's own list is used. Disabled entries are skipped by evaluation
-and kept exactly as given by every save and export, `apply` included. `apply` writes a package when edits remain
+and kept by every save and export, `apply` included (see "Exports"). `apply` writes a package when edits remain
 (time edits, masks, the skips excisions leave), since the `.tap` JSON form
 holds no edits. `preview` with no edits prints exactly `tap-index
 transcript`'s output after a duration line; `tap transcript` is unchanged.
@@ -216,6 +216,35 @@ to. **The raw events still hold the secret**: they are never changed, so a
 Only what is built from the edited program (its index and transcript,
 `bake` and `tap-eval apply`) is clean.
 
+## Exports
+
+`bake::bake` (and `tap-eval apply`) writes the session as an evaluation
+plays it: output events carry their program bytes (events no edit touched
+are kept exactly as recorded), withheld input events keep their time and
+origin without bytes, and an excised command's input events are dropped.
+**A bake never makes protected text visible**; its edit list carries:
+
+- enabled time-only edits, a byte anchor moved to the same byte, or, where
+  that byte was removed, replaced by the moment it resolved to (events keep
+  their times, so this is exact);
+- every enabled excision, done or refused, as the skip of its time;
+- every resolved mask, anchored to the program byte it resolved to, so the
+  export masks the same cells over the same times;
+- every `ReplaceText` that needed a mask, as blur masks over each piece of
+  drawn text in its range (one that draws nothing is kept, moved).
+
+Applied edits are in the bytes and edits that had no effect (superseded,
+inert masks) are dropped, which changes nothing anyone sees. A protecting
+edit that cannot be carried (a mask would have to anchor in an event whose
+recorded and playback bytes differ) fails the bake with
+`BakeError::Uncarried`, listing each.
+
+Entries not evaluated (disabled, or already marked) are moved onto the new
+bytes when every byte they name survives unchanged; otherwise they are
+kept as given with `"preBake": true`. Evaluation (here and tap-model's time
+map) refuses an enabled `preBake` entry (`Outcome::PreBake`), so it never
+touches other bytes.
+
 ## Tests
 
 - `tests/excise.rs`: every command of the zsh fixtures is excised or
@@ -237,6 +266,10 @@ Only what is built from the edited program (its index and transcript,
   across a normalised Kitty file transfer are refused; exports keep it.
 - `tests/disabled.rs`: disabled entries of every kind survive every save
   and export.
+- `tests/bake.rs`: an export of a redaction with a mask and a rewrite that
+  needed one masks the same cells over the same times, and covers the
+  latter; a protection that cannot be carried refuses the bake; disabled
+  edits re-enabled after a bake name the same bytes or are refused.
 - `tests/eval.rs`: unedited sessions (no edits, or time-only edits) index,
   transcribe, checkpoint and seek byte for byte as before; seek over edited
   programs equals a replay from the start at every event and checkpoint;

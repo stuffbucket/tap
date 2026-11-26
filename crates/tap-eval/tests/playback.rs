@@ -127,7 +127,7 @@ fn an_export_keeps_untouched_events_as_recorded() {
     let entries = vec![EditEntry::new(excise(75, 121))];
     let evaluation = tap_eval::evaluate_entries(&session, &raw, &entries).unwrap();
     assert!(matches!(evaluation.outcomes[0], Outcome::Excised { .. }));
-    let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation);
+    let baked = tap_eval::bake::bake(&session, &raw, &entries, &evaluation).unwrap();
     let before = session.pane_events(&main_pane());
     let after = baked.pane_events(&main_pane());
     // The transfer keeps its recorded bytes and its playback bytes.

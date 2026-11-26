@@ -150,6 +150,13 @@ pub enum Outcome {
         /// Index in [`Evaluation::masks`].
         region: usize,
     },
+    /// The entry is marked `preBake`: its byte coordinates count the
+    /// recording before it was baked into this one, so it is not
+    /// evaluated.
+    PreBake {
+        /// Why.
+        reason: String,
+    },
     /// The mask covers nothing.
     Inert {
         /// Why.
@@ -300,7 +307,14 @@ pub fn evaluate_entries(
     raw: &SessionIndex,
     entries: &[EditEntry],
 ) -> Result<Evaluation, EvalError> {
-    let enabled = || entries.iter().enumerate().filter(|(_, e)| e.enabled);
+    // Entries marked preBake count bytes of another recording: never
+    // evaluated.
+    let enabled = || {
+        entries
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| e.enabled && !e.pre_bake)
+    };
     let unsupported: Vec<UnsupportedOp> = enabled()
         .filter_map(|(index, e)| {
             let reason = match &e.op {
@@ -337,6 +351,9 @@ pub fn evaluate_entries(
         .iter()
         .map(|e| match (e.enabled, e.op.class()) {
             (false, _) => Some(Outcome::Disabled),
+            (true, _) if e.pre_bake => Some(Outcome::PreBake {
+                reason: tap_model::edl::PRE_BAKE.into(),
+            }),
             (true, OpClass::TimeOnly) => Some(Outcome::Time),
             _ => None,
         })
@@ -353,9 +370,10 @@ pub fn evaluate_entries(
     // refused) as a cut of its time, everything else without effect.
     let mut timed: Vec<EditEntry> = entries
         .iter()
-        .map(|e| EditEntry {
-            enabled: e.enabled && e.op.class() == OpClass::TimeOnly,
-            op: e.op.clone(),
+        .map(|e| {
+            let mut timed = EditEntry::disabled(e.op.clone());
+            timed.enabled = e.enabled && !e.pre_bake && e.op.class() == OpClass::TimeOnly;
+            timed
         })
         .collect();
     for (index, from, to) in cuts {
@@ -412,7 +430,7 @@ fn evaluate_pane(
     let mine = entries
         .iter()
         .enumerate()
-        .filter(|(_, e)| e.enabled && e.op.panes().iter().all(|p| **p == pane.pane));
+        .filter(|(_, e)| e.enabled && !e.pre_bake && e.op.panes().iter().all(|p| **p == pane.pane));
     // Output events whose recorded bytes differ from the bytes they play:
     // no splice may touch them.
     let differing: Vec<(usize, Range<u64>)> = events

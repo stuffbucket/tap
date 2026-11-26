@@ -17,6 +17,12 @@
 //!
 //! An entry may carry `"enabled": false`; disabled entries are kept in the
 //! list (so the UI can offer them again) but have no effect.
+//!
+//! An entry may also carry `"preBake": true`: it was copied from a recording
+//! that was later baked into this one (its byte-changing edits applied to
+//! the bytes), and its byte coordinates could not be moved onto the new
+//! bytes, so they still count the old ones. Such an entry is kept so nothing
+//! is lost, but it is never evaluated: see [`PRE_BAKE`].
 
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -323,6 +329,9 @@ impl EditOp {
     }
 }
 
+/// Why an entry marked `preBake` is refused when enabled.
+pub const PRE_BAKE: &str = "its byte coordinates count the recording before it was baked into this one, and the bytes they named did not survive; anchor it again to the new bytes or remove it";
+
 /// One entry in the edit list: an op and whether it is switched on.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct EditEntry {
@@ -330,12 +339,28 @@ pub struct EditEntry {
     pub enabled: bool,
     /// The op.
     pub op: EditOp,
+    /// Its byte coordinates count the bytes of the recording before it was
+    /// baked, not this one's, so it is refused when enabled. Serialised as
+    /// `"preBake": true`, only when set.
+    pub pre_bake: bool,
 }
 
 impl EditEntry {
     /// An enabled entry.
     pub fn new(op: EditOp) -> Self {
-        Self { enabled: true, op }
+        Self {
+            enabled: true,
+            op,
+            pre_bake: false,
+        }
+    }
+
+    /// A disabled entry.
+    pub fn disabled(op: EditOp) -> Self {
+        Self {
+            enabled: false,
+            ..Self::new(op)
+        }
     }
 }
 
@@ -348,10 +373,13 @@ impl From<EditOp> for EditEntry {
 impl Serialize for EditEntry {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut value = serde_json::to_value(&self.op).map_err(serde::ser::Error::custom)?;
-        if !self.enabled
-            && let Some(map) = value.as_object_mut()
-        {
-            map.insert("enabled".into(), false.into());
+        if let Some(map) = value.as_object_mut() {
+            if !self.enabled {
+                map.insert("enabled".into(), false.into());
+            }
+            if self.pre_bake {
+                map.insert("preBake".into(), true.into());
+            }
         }
         value.serialize(serializer)
     }
@@ -369,7 +397,20 @@ impl<'de> Deserialize<'de> for EditEntry {
                 )));
             }
         };
+        let pre_bake = match map.remove("preBake") {
+            None => false,
+            Some(serde_json::Value::Bool(b)) => b,
+            Some(other) => {
+                return Err(D::Error::custom(format!(
+                    "`preBake` must be a boolean, not {other}"
+                )));
+            }
+        };
         let op = EditOp::deserialize(serde_json::Value::Object(map)).map_err(D::Error::custom)?;
-        Ok(Self { enabled, op })
+        Ok(Self {
+            enabled,
+            op,
+            pre_bake,
+        })
     }
 }
