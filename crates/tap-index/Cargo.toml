@@ -17,5 +17,9 @@ thiserror = "2"
 # Only src/vt.rs uses it.
 libghostty-vt = { git = "https://github.com/Uzaaft/libghostty-rs", rev = "81eaf6a27494d9a5b6f66a1f7d7195c14bc69b97" }
 
+[dev-dependencies]
+base64 = "0.22"
+serde_json = "1"
+
 [lints]
 workspace = true

@@ -437,8 +437,10 @@ dependencies = [
 name = "tap-index"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "libghostty-vt",
  "serde",
+ "serde_json",
  "tap-model",
  "thiserror",
 ]
