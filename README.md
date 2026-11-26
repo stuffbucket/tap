@@ -18,6 +18,7 @@ Tap records terminal sessions as editable timelines and replays them through Gho
 - Live browser capture backed by tmux, with right-click split creation/focus/close recorded in the PTY stream.
 - Live browser capture with Tap-native independent PTYs (`native-live`): right-click split/close with neighbour reflow, per-pane fit-to-window resizes, and UTF-8/IME/paste input.
 - Optional macOS screenshots through Ghostty's actual internal CoreText/Metal/IOSurface renderer.
+- A command transcript (`tap transcript`): prompts, commands, output, exit codes and full-screen programs, split by the OSC 133 marks Tap's zsh integration records, or by Enter keystrokes without it. It runs the Rust `tap-index` tool, which is built from source and not yet part of Tap.app (see [`BUILDING.md`](BUILDING.md)).
 
 ## Build
 
@@ -232,6 +233,7 @@ bun run build
 bun src/cli.ts doctor
 bun src/cli.ts quickstart
 bun run check
+mise x rust@1.99.0 zig@0.17.1 bun@1.4.3 -- bun run check:rust
 bun run test:e2e
 bun run test:vhs-upstream
 bun src/cli.ts --help

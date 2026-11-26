@@ -379,3 +379,35 @@ fn a_package_indexes_like_the_json_it_came_from() {
     std::fs::remove_dir_all(&dir).unwrap();
     assert_eq!(from_package.transcript(), index("osc133").transcript());
 }
+
+#[test]
+fn the_cli_prints_text_and_json() {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/osc133.tap");
+    let run = |args: &[&str]| {
+        let out = std::process::Command::new(env!("CARGO_BIN_EXE_tap-index"))
+            .args(args)
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "{}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        String::from_utf8(out.stdout).unwrap()
+    };
+    let path = path.to_str().unwrap();
+    let text = run(&["transcript", path]);
+    assert!(text.contains("tap$ cat /nonexistent-tap-fixture\n    cat: /nonexistent-tap-fixture: No such file or directory\n    -- exit 1,"), "{text}");
+    assert!(text.contains("[full screen: less for 1."), "{text}");
+    let json: serde_json::Value =
+        serde_json::from_str(&run(&["transcript", "--json", path])).unwrap();
+    assert_eq!(json["panes"][0]["blocks"][2]["exitCode"], 1);
+    let index: serde_json::Value = serde_json::from_str(&run(&["index", path])).unwrap();
+    assert_eq!(index["panes"][0]["marks"][0]["kind"], "prompt");
+
+    let missing = std::process::Command::new(env!("CARGO_BIN_EXE_tap-index"))
+        .args(["transcript", "/nonexistent/x.tap"])
+        .output()
+        .unwrap();
+    assert!(!missing.status.success());
+}

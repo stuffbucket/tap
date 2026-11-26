@@ -1,6 +1,6 @@
 # Tap editor: design direction
 
-Status: proposal (2026-11-24). Implemented so far: OSC 133 shell integration at capture, and `crates/tap-model` (the `Session.tap/` package, legacy import and export, the EDL and the time map for time-only ops; its [README](../crates/tap-model/README.md) specifies the on-disk format). It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
+Status: proposal (2026-11-24). Implemented so far: OSC 133 shell integration at capture; `crates/tap-model` (the `Session.tap/` package, legacy import and export, the EDL and the time map for time-only ops; its [README](../crates/tap-model/README.md) specifies the on-disk format); and `crates/tap-index` (marks, segmentation, the transcript, in-memory checkpoints and seek, and `tap transcript`; its [README](../crates/tap-index/README.md) describes the rules). Not yet: evaluation of byte-changing ops, thumbnails, rendering, the foreground-process-group lane, and checkpoints on disk. It builds on [`architecture.md`](architecture.md); code references are to the tree at `3418d49`. Requirements: macOS first, with Linux and Windows to follow.
 
 ## What we are building
 
