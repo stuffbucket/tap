@@ -1,0 +1,8 @@
+[env]
+# Build libghostty-vt (through libghostty-rs, for crates/tap-index) as
+# ReleaseSafe in every profile. Its Debug build runs Ghostty's slow integrity
+# checks on every page operation, about 20 KB/s of output, which makes the
+# tests take minutes; ReleaseSafe keeps Zig's safety checks, which recordings
+# (untrusted input) should run with anyway. An environment variable of the
+# same name overrides this.
+LIBGHOSTTY_VT_SYS_OPTIMIZE = { value = "ReleaseSafe", force = false }

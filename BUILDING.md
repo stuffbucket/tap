@@ -39,7 +39,7 @@ Generated binaries are written under `native/bin/`; generated dependency trees a
 
 ```sh
 mise x bun@1.4.3 -- bun run check
-mise x rust@1.99.0 bun@1.4.3 -- bun run check:rust
+mise x rust@1.99.0 zig@0.17.1 bun@1.4.3 -- bun run check:rust
 mise x bun@1.4.3 -- bun run test:e2e
 mise x bun@1.4.3 -- bun run test:vhs-upstream
 mise x bun@1.4.3 -- bun src/cli.ts doctor

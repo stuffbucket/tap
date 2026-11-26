@@ -18,16 +18,17 @@ Nothing here is published (`publish = false`).
 ## Checks
 
 The toolchain is pinned in `rust-toolchain.toml` (1.99.0). Run cargo through
-mise so no global Rust default is needed:
+mise so no global Rust default is needed. The workspace's `tap-index` crate
+builds libghostty-vt with Zig, so include the Zig that `mise.toml` pins:
 
 ```sh
 mise x rust@1.99.0 -- cargo fmt --check
-mise x rust@1.99.0 -- cargo clippy --all-targets -- -D warnings
-mise x rust@1.99.0 -- cargo test
+mise x rust@1.99.0 zig@0.17.1 -- cargo clippy --all-targets -- -D warnings
+mise x rust@1.99.0 zig@0.17.1 -- cargo test
 ```
 
-or all three with `mise x rust@1.99.0 bun@1.4.3 -- bun run check:rust`. `bun run check`
-does not run them, so machines without Rust are unaffected.
+or all three with `mise x rust@1.99.0 zig@0.17.1 bun@1.4.3 -- bun run check:rust`.
+`bun run check` does not run them, so machines without Rust are unaffected.
 
 ## The package
 
